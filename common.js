@@ -173,5 +173,105 @@ function getTableFromURL() {
   return parseInt(params.get('table') || '0', 10);
 }
 
+// ===== Dish Detail Modal (縮圖點擊放大) =====
+function showDishDetail(dishId, sourcePage = 'order') {
+  const menu = getMenu();
+  const dish = menu.find(d => d.id === dishId);
+  if (!dish) {
+    showToast('找不到此菜品', 'error');
+    return;
+  }
+
+  // 移除舊 modal
+  const existing = document.getElementById('__dish_modal');
+  if (existing) existing.remove();
+
+  const imageHTML = dish.image && dish.image.startsWith('http')
+    ? `<img src="${dish.image}" alt="${dish.name}" class="w-full h-64 object-cover rounded-xl">`
+    : `<div class="w-full h-64 bg-emerald-50 rounded-xl flex items-center justify-center text-8xl">${dish.image || '🍽️'}</div>`;
+
+  const modal = document.createElement('div');
+  modal.id = '__dish_modal';
+  modal.className = 'fixed inset-0 bg-black/70 z-[9997] flex items-center justify-center p-4';
+  modal.innerHTML = `
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden animate-[fadeIn_0.2s]">
+      <div class="relative">
+        ${imageHTML}
+        <button onclick="document.getElementById('__dish_modal').remove()"
+                class="absolute top-3 right-3 w-9 h-9 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center text-lg font-bold">✕</button>
+      </div>
+      <div class="p-5">
+        <p class="text-xs text-emerald-600 font-bold mb-1">${dish.category}</p>
+        <h2 class="text-2xl font-black text-gray-800 mb-2">${dish.name}</h2>
+        ${dish.description ? `<p class="text-gray-600 mb-3">${dish.description}</p>` : ''}
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-3xl font-black text-emerald-700">${formatPrice(dish.price)}</span>
+          <span class="text-sm text-gray-500">${dish.available === false ? '已售完' : '供應中'}</span>
+        </div>
+        <button onclick="addToCartFromDetail('${dish.id}', '${sourcePage}')"
+                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-lg transition shadow-md">
+          + 加入購物車
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  // 點背景關閉
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+// 從 detail modal 加入購物車
+function addToCartFromDetail(dishId, sourcePage) {
+  if (sourcePage === 'order' && typeof updateCart === 'function') {
+    updateCart(dishId, 1);
+    showToast('已加入購物車 ✅', 'success', 1500);
+  } else if (sourcePage === 'pos' && typeof posAddToOrder === 'function') {
+    posAddToOrder(dishId);
+    showToast('已加入點餐單 ✅', 'success', 1500);
+  } else {
+    // 首頁沒有購物車, 跳轉到 order.html
+    showToast('前往點餐頁...', 'info', 1000);
+    setTimeout(() => location.href = `order.html?focus=${dishId}`, 800);
+  }
+  const modal = document.getElementById('__dish_modal');
+  if (modal) modal.remove();
+}
+
+// ===== 結帳後跳 KDS 詢問 =====
+function showCheckoutRedirect(onContinue) {
+  const existing = document.getElementById('__redirect_modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = '__redirect_modal';
+  modal.className = 'fixed inset-0 bg-black/60 z-[9998] flex items-center justify-center p-4';
+  modal.innerHTML = `
+    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
+      <div class="text-5xl mb-3">🎉</div>
+      <h3 class="text-xl font-black text-emerald-800 mb-2">訂單已送出！</h3>
+      <p class="text-gray-600 mb-6 text-sm">廚房已收到訂單<br>要看廚房製作狀態嗎？</p>
+      <div class="flex flex-col gap-2">
+        <button id="__go_kds" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition">
+          🍳 跳到 KDS 廚房看板
+        </button>
+        <button id="__stay" class="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+          繼續點餐
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('#__go_kds').onclick = () => {
+    modal.remove();
+    location.href = 'kds.html';
+  };
+  modal.querySelector('#__stay').onclick = () => {
+    modal.remove();
+    if (onContinue) onContinue();
+  };
+}
+
 // ===== 初始化 =====
 initStorage();

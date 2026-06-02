@@ -113,27 +113,69 @@
     <p class="text-xs opacity-60 mt-2">Powered by NEUXA POS System</p>
   </footer>
 
+  <!-- Dish Detail Modal (B2) -->
+  <div id="dish-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onclick="if(event.target.id==='dish-modal') hideDishDetail()">
+    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl">
+      <div id="dish-modal-img" class="aspect-square bg-emerald-100"></div>
+      <div class="p-6">
+        <h2 id="dish-modal-name" class="text-2xl font-black text-gray-800 mb-2"></h2>
+        <p id="dish-modal-desc" class="text-sm text-gray-600 mb-4"></p>
+        <div class="flex items-center justify-between mb-4">
+          <span id="dish-modal-price" class="text-3xl font-black text-emerald-700"></span>
+          <span id="dish-modal-cat" class="text-xs px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium"></span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="hideDishDetail()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200">關閉</button>
+          <a href="order.html" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 text-center">🛒 立即點餐</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="common.js"></script>
   <script>
     // 渲染菜單
     const menu = getMenu();
     const grid = document.getElementById('dishes-grid');
     grid.innerHTML = menu.slice(0, 12).map(dish => `
-      <div class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition cursor-pointer group" onclick="location.href='order.html'">
-        <div class="aspect-square bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center text-5xl">
-          ${dish.image 
-            ? (dish.image.startsWith('http') 
-                ? `<img src="${dish.image}" alt="${dish.name}" class="w-full h-full object-cover">` 
+      <div class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition group">
+        <div class="aspect-square bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center text-5xl cursor-pointer" onclick="showDishDetail('${dish.id}')">
+          ${dish.image
+            ? (dish.image.startsWith('http')
+                ? `<img src="${dish.image}" alt="${dish.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">`
                 : `<div class="w-full h-full flex items-center justify-center text-5xl">${dish.image}</div>`)
             : `<div class="w-full h-full flex items-center justify-center text-5xl">🍽️</div>`}
         </div>
-        <div class="p-3">
+        <div class="p-3 cursor-pointer" onclick="showDishDetail('${dish.id}')">
           <p class="text-xs text-emerald-600 font-medium mb-1">${dish.category}</p>
           <h3 class="font-bold text-gray-800 mb-1 group-hover:text-emerald-600 transition">${dish.name}</h3>
           <p class="text-emerald-700 font-bold">${formatPrice(dish.price)}</p>
         </div>
       </div>
     `).join('');
+
+    // B2: 縮圖點擊放大
+    function showDishDetail(dishId) {
+      const dish = menu.find(d => d.id === dishId);
+      if (!dish) return;
+      const imgContainer = document.getElementById('dish-modal-img');
+      if (dish.image && dish.image.startsWith('http')) {
+        imgContainer.innerHTML = `<img src="${dish.image}" class="w-full h-full object-cover">`;
+      } else if (dish.image) {
+        imgContainer.innerHTML = `<div class="w-full h-full flex items-center justify-center text-9xl">${dish.image}</div>`;
+      } else {
+        imgContainer.innerHTML = `<div class="w-full h-full flex items-center justify-center text-9xl">🍽️</div>`;
+      }
+      document.getElementById('dish-modal-name').textContent = dish.name;
+      document.getElementById('dish-modal-desc').textContent = dish.description || '招牌好菜, 不容錯過';
+      document.getElementById('dish-modal-price').textContent = formatPrice(dish.price);
+      document.getElementById('dish-modal-cat').textContent = dish.category;
+      document.getElementById('dish-modal').classList.remove('hidden');
+    }
+
+    function hideDishDetail() {
+      document.getElementById('dish-modal').classList.add('hidden');
+    }
   </script>
 </body>
 </html>

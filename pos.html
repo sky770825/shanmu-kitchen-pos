@@ -208,7 +208,13 @@
       const items = Object.values(cart).map(c => ({ dish_id: c.dish.id, qty: c.qty, name: c.dish.name, price: c.dish.price }));
       const note = document.getElementById('note-input')?.value || '';
       const order = createOrder(selectedTable, items, note);
-      showToast(`✅ 桌 ${selectedTable} 訂單已送出 · ${formatPrice(order.total)}`, 'success', 3000);
+      // B1: 結帳跳 KDS 詢問
+      const info = `桌 ${selectedTable} · ${items.length} 項 · ${formatPrice(order.total)}`;
+      if (confirm(`✅ 訂單已送出！${info}\n\n點確定跳 KDS 看廚房狀態\n點取消繼續點下一桌`)) {
+        location.href = `kds.html#table=${selectedTable}`;
+      } else {
+        showToast(`桌 ${selectedTable} 訂單 ${order.id.slice(-6)} 已記錄`, 'info', 2000);
+      }
       cart = {};
       closeSheet();
       renderDishes();

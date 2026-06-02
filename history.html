@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>訂單歷史 — 山木小館</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-20">
+  <header class="bg-emerald-700 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div>
+        <h1 class="text-lg font-bold">📋 訂單歷史</h1>
+        <p class="text-xs opacity-80" id="stats">載入中...</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="pos.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">🧾 POS</a>
+        <a href="kds.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">🍳 KDS</a>
+        <a href="index.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">🏠</a>
+      </div>
+    </div>
+    <div class="max-w-5xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto">
+      <button data-filter="all" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-white text-emerald-700">全部</button>
+      <button data-filter="today" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">📅 今天</button>
+      <button data-filter="pending" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">⏳ 待處理</button>
+      <button data-filter="preparing" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">🔥 製作中</button>
+      <button data-filter="ready" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">✅ 出餐</button>
+      <button data-filter="served" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">📤 已送出</button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-4">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm text-gray-600">
+        共 <span id="total-count" class="font-bold text-emerald-700">0</span> 筆 ·
+        總額 <span id="total-amount" class="font-bold text-emerald-700">$0</span>
+      </h2>
+      <button onclick="exportCSV()" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-full hover:bg-emerald-700">📥 匯出 CSV</button>
+    </div>
+    <div id="orders-list" class="space-y-2"></div>
+    <div id="empty-state" class="text-center text-gray-400 py-20 hidden">
+      <div class="text-6xl mb-4">📋</div>
+      <p>目前沒有訂單</p>
+    </div>
+  </main>
+
+  <script src="common.js"></script>
+  <script>
+    let currentFilter = 'all';
+
+    function isToday(iso) {
+      const d = new Date(iso);
+      const today = new Date();
+      return d.getFullYear() === today.getFullYear() &&
+             d.getMonth() === today.getMonth() &&
+             d.getDate() === today.getDate();
+    }
+
+    function getElapsed(iso) {
+      const ms = Date.now() - new Date(iso).getTime();
+      const m = Math.floor(ms / 60000);
+      const h = Math.floor(m / 60);
+      if (h > 0) return `${h}時${m % 60}分前`;
+      if (m > 0) return `${m}分前`;
+      return '剛剛';
+    }
+
+    function getStatusLabel(s) {
+      return {
+        pending: '⏳ 待處理',
+        preparing: '🔥 製作中',
+        ready: '✅ 出餐',
+        served: '📤 已送出',
+      }[s] || s;
+    }
+
+    function getStatusColor(s) {
+      return {
+        pending: 'border-amber-400 bg-amber-50',
+        preparing: 'border-blue-400 bg-blue-50',
+        ready: 'border-emerald-400 bg-emerald-50',
+        served: 'border-gray-300 bg-gray-50',
+      }[s] || 'border-gray-300 bg-white';
+    }
+
+    function renderOrders() {
+      const all = getOrders().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      let filtered = all;
+      if (currentFilter === 'today') {
+        filtered = all.filter(o => isToday(o.created_at));
+      } else if (currentFilter !== 'all') {
+        filtered = all.filter(o => o.status === currentFilter);
+      }
+
+      // stats
+      const today = all.filter(o => isToday(o.created_at));
+      const todayRevenue = today.reduce((s, o) => s + o.total, 0);
+      document.getElementById('stats').textContent = `今天 ${today.length} 筆 · ${formatPrice(todayRevenue)}`;
+      document.getElementById('total-count').textContent = filtered.length;
+      document.getElementById('total-amount').textContent = formatPrice(filtered.reduce((s, o) => s + o.total, 0));
+
+      const list = document.getElementById('orders-list');
+      const empty = document.getElementById('empty-state');
+      if (filtered.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      list.innerHTML = filtered.map(o => `
+        <details class="bg-white rounded-2xl border-2 ${getStatusColor(o.status)} overflow-hidden">
+          <summary class="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-black/5">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <span class="text-2xl font-black text-gray-700">桌 ${o.table || '?'}</span>
+              <span class="text-xs px-2 py-1 rounded-full bg-white border">${getStatusLabel(o.status)}</span>
+              <span class="text-xs text-gray-500">${getElapsed(o.created_at)}</span>
+            </div>
+            <div class="text-right">
+              <div class="text-lg font-black text-emerald-700">${formatPrice(o.total)}</div>
+              <div class="text-xs text-gray-500">${o.items.length} 項</div>
+            </div>
+          </summary>
+          <div class="px-4 py-3 border-t border-gray-200 bg-white/50">
+            <ul class="space-y-1 text-sm mb-2">
+              ${o.items.map(i => `<li class="flex justify-between"><span class="truncate">${i.name} × ${i.qty}</span><span class="text-gray-500">${formatPrice(i.price * i.qty)}</span></li>`).join('')}
+            </ul>
+            ${o.note ? `<p class="text-xs text-amber-700 mb-2">📝 ${o.note}</p>` : ''}
+            <div class="flex items-center justify-between text-xs text-gray-500">
+              <span>#${o.id.slice(-6)} · ${new Date(o.created_at).toLocaleString('zh-TW')}</span>
+              <div class="flex gap-2">
+                ${o.status === 'pending' ? `<button onclick="changeStatus('${o.id}', 'preparing')" class="text-blue-600 hover:underline">🔥 製作</button>` : ''}
+                ${o.status === 'preparing' ? `<button onclick="changeStatus('${o.id}', 'ready')" class="text-emerald-600 hover:underline">✅ 出餐</button>` : ''}
+                ${o.status === 'ready' ? `<button onclick="changeStatus('${o.id}', 'served')" class="text-gray-600 hover:underline">📤 送出</button>` : ''}
+                <button onclick="delOrder('${o.id}')" class="text-red-500 hover:underline">🗑 刪除</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      `).join('');
+    }
+
+    function changeStatus(id, status) {
+      updateOrderStatus(id, status);
+      showToast(`訂單已更新為 ${getStatusLabel(status)}`, 'success');
+      renderOrders();
+    }
+
+    function delOrder(id) {
+      showConfirm('刪除訂單', '確定要刪除這筆訂單嗎？此操作無法復原', () => {
+        deleteOrder(id);
+        showToast('訂單已刪除', 'success');
+        renderOrders();
+      });
+    }
+
+    function exportCSV() {
+      const orders = getOrders().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const rows = [['訂單ID', '桌號', '狀態', '建立時間', '品項', '總額', '備註']];
+      orders.forEach(o => {
+        const items = o.items.map(i => `${i.name}×${i.qty}`).join('|');
+        rows.push([o.id, o.table, o.status, o.created_at, items, o.total, o.note || '']);
+      });
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orders_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`已匯出 ${orders.length} 筆訂單`, 'success');
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        currentFilter = btn.dataset.filter;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('bg-white', 'text-emerald-700');
+          b.classList.add('bg-emerald-800/40', 'text-white');
+        });
+        btn.classList.remove('bg-emerald-800/40', 'text-white');
+        btn.classList.add('bg-white', 'text-emerald-700');
+        renderOrders();
+      };
+    });
+
+    renderOrders();
+    setInterval(renderOrders, 5000);
+  </script>
+</body>
+</html>
