@@ -6,7 +6,8 @@
   <title>廚房看板 KDS — 山木小館</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+    .emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Twemoji Mozilla", sans-serif; }
     @keyframes newOrder { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .new-order { animation: newOrder 0.4s ease-out; }
   </style>
@@ -40,7 +41,9 @@
     </div>
     <div id="empty-state" class="text-center text-slate-500 py-20">
       <div class="text-6xl mb-4">🍽️</div>
-      <p>目前沒有訂單</p>
+      <p class="mb-4">目前沒有訂單</p>
+      <a href="seed.html" class="inline-block bg-emerald-600 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-emerald-700 transition">🌱 注入 4 筆測試訂單</a>
+      <p class="text-xs text-slate-600 mt-3">或到 <a href="order.html" class="text-emerald-400 underline">點餐頁</a> 送出真實訂單</p>
     </div>
   </main>
 
