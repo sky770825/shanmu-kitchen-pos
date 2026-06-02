@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理後台 — 山木小館</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
+  </style>
+</head>
+<body class="bg-emerald-50 min-h-screen">
+  <!-- Login -->
+  <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full">
+      <div class="text-center mb-6">
+        <div class="text-5xl mb-2">🔐</div>
+        <h1 class="text-2xl font-bold text-emerald-800">山木小館 管理後台</h1>
+      </div>
+      <input id="pwd" type="password" placeholder="請輸入管理密碼" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-3 focus:border-emerald-500 outline-none" onkeypress="if(event.key === 'Enter') login()">
+      <button onclick="login()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition">登入</button>
+      <p class="text-xs text-gray-400 text-center mt-4">提示: 密碼 8532</p>
+    </div>
+  </div>
+
+  <!-- Admin (hidden by default) -->
+  <div id="admin-page" class="hidden">
+    <header class="bg-emerald-700 text-white shadow-lg">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <h1 class="text-lg font-bold">⚙️ 管理後台</h1>
+        <div class="flex gap-2">
+          <a href="pos.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">🧾 POS</a>
+          <a href="qr.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">📱 QR</a>
+          <button onclick="logout()" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">登出</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-4">
+      <!-- Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <p class="text-xs text-gray-500">菜品數</p>
+          <p class="text-2xl font-black text-emerald-700" id="stat-dishes">0</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <p class="text-xs text-gray-500">訂單數</p>
+          <p class="text-2xl font-black text-blue-700" id="stat-orders">0</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <p class="text-xs text-gray-500">總營業額</p>
+          <p class="text-2xl font-black text-amber-700" id="stat-revenue">$0</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <p class="text-xs text-gray-500">類別數</p>
+          <p class="text-2xl font-black text-purple-700" id="stat-cats">0</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm flex flex-wrap gap-2">
+        <button onclick="showAddDish()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">+ 新增菜品</button>
+        <button onclick="exportData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">📥 匯出資料</button>
+        <button onclick="resetData()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700">🗑 重置全部</button>
+      </div>
+
+      <!-- Menu list -->
+      <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b bg-emerald-50">
+          <h2 class="font-bold text-emerald-800">菜品管理</h2>
+        </div>
+        <div id="menu-list" class="divide-y">
+          <!-- 由 JS 渲染 -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full">
+      <h3 class="text-xl font-bold mb-4" id="edit-title">新增菜品</h3>
+      <div class="space-y-3">
+        <input id="edit-name" placeholder="菜品名稱" class="w-full border rounded-lg px-3 py-2">
+        <input id="edit-category" placeholder="類別 (招牌菜/熱炒/湯品...)" class="w-full border rounded-lg px-3 py-2">
+        <input id="edit-price" type="number" placeholder="價格" class="w-full border rounded-lg px-3 py-2">
+        <input id="edit-image" placeholder="圖片 URL (選填)" class="w-full border rounded-lg px-3 py-2">
+        <textarea id="edit-desc" placeholder="描述 (選填)" class="w-full border rounded-lg px-3 py-2" rows="2"></textarea>
+        <label class="flex items-center gap-2">
+          <input id="edit-available" type="checkbox" checked class="w-4 h-4">
+          <span class="text-sm">上架中</span>
+        </label>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="closeEdit()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium">取消</button>
+        <button onclick="saveDish()" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-medium">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    const PASSWORD = '8532';
+    let editingId = null;
+
+    function login() {
+      const pwd = document.getElementById('pwd').value;
+      if (pwd === PASSWORD) {
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('admin-page').classList.remove('hidden');
+        render();
+      } else {
+        showToast('密碼錯誤', 'error');
+      }
+    }
+
+    function logout() {
+      document.getElementById('pwd').value = '';
+      document.getElementById('login-page').classList.remove('hidden');
+      document.getElementById('admin-page').classList.add('hidden');
+    }
+
+    function render() {
+      const menu = getMenu();
+      const orders = getOrders();
+      const revenue = orders.reduce((s, o) => s + o.total, 0);
+      const cats = new Set(menu.map(d => d.category));
+
+      document.getElementById('stat-dishes').textContent = menu.length;
+      document.getElementById('stat-orders').textContent = orders.length;
+      document.getElementById('stat-revenue').textContent = formatPrice(revenue);
+      document.getElementById('stat-cats').textContent = cats.size;
+
+      const list = document.getElementById('menu-list');
+      list.innerHTML = menu.map(d => `
+        <div class="px-4 py-3 flex items-center gap-3 hover:bg-gray-50">
+          <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            ${d.image ? `<img src="${d.image}" class="w-full h-full object-cover rounded-lg">` : '🍽️'}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold truncate">${d.name} ${d.available === false ? '<span class="text-xs text-red-500">(下架)</span>' : ''}</p>
+            <p class="text-xs text-gray-500">${d.category} · ${formatPrice(d.price)}</p>
+          </div>
+          <button onclick="editDish('${d.id}')" class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-sm">✏️</button>
+          <button onclick="delDish('${d.id}')" class="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-sm">🗑</button>
+        </div>
+      `).join('');
+    }
+
+    function showAddDish() {
+      editingId = null;
+      document.getElementById('edit-title').textContent = '新增菜品';
+      document.getElementById('edit-name').value = '';
+      document.getElementById('edit-category').value = '';
+      document.getElementById('edit-price').value = '';
+      document.getElementById('edit-image').value = '';
+      document.getElementById('edit-desc').value = '';
+      document.getElementById('edit-available').checked = true;
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    function editDish(id) {
+      const menu = getMenu();
+      const d = menu.find(x => x.id === id);
+      if (!d) return;
+      editingId = id;
+      document.getElementById('edit-title').textContent = '編輯菜品';
+      document.getElementById('edit-name').value = d.name;
+      document.getElementById('edit-category').value = d.category;
+      document.getElementById('edit-price').value = d.price;
+      document.getElementById('edit-image').value = d.image || '';
+      document.getElementById('edit-desc').value = d.description || '';
+      document.getElementById('edit-available').checked = d.available !== false;
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    function closeEdit() {
+      document.getElementById('edit-modal').classList.add('hidden');
+    }
+
+    function saveDish() {
+      const name = document.getElementById('edit-name').value.trim();
+      const category = document.getElementById('edit-category').value.trim();
+      const price = parseInt(document.getElementById('edit-price').value, 10);
+      const image = document.getElementById('edit-image').value.trim();
+      const description = document.getElementById('edit-desc').value.trim();
+      const available = document.getElementById('edit-available').checked;
+
+      if (!name || !category || isNaN(price)) {
+        showToast('請填寫完整 (名稱/類別/價格)', 'error');
+        return;
+      }
+
+      const menu = getMenu();
+      if (editingId) {
+        const idx = menu.findIndex(d => d.id === editingId);
+        if (idx >= 0) {
+          menu[idx] = { ...menu[idx], name, category, price, image, description, available };
+        }
+      } else {
+        const newId = 'd' + Date.now();
+        menu.push({ id: newId, name, category, price, image, description, available });
+      }
+      saveMenu(menu);
+      showToast(editingId ? '已更新' : '已新增', 'success');
+      closeEdit();
+      render();
+    }
+
+    function delDish(id) {
+      showConfirm('刪除菜品', '確定要刪除這道菜嗎？', () => {
+        const menu = getMenu().filter(d => d.id !== id);
+        saveMenu(menu);
+        showToast('已刪除', 'success');
+        render();
+      });
+    }
+
+    function exportData() {
+      const data = { menu: getMenu(), orders: getOrders() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('已匯出', 'success');
+    }
+
+    function resetData() {
+      showConfirm('重置全部資料', '這會清空所有菜品和訂單，確定嗎？', () => {
+        resetAll();
+        showToast('已重置', 'success');
+        render();
+      });
+    }
+  </script>
+</body>
+</html>

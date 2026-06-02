@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR 碼生成 — 山木小館</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    @media print {
+      body { background: white; }
+      .no-print { display: none !important; }
+      .qr-card { break-inside: avoid; border: 1px solid #ddd !important; }
+    }
+    .qr-pattern { display: grid; grid-template-columns: repeat(25, 1fr); gap: 1px; }
+    .qr-cell { aspect-ratio: 1; background: #000; }
+    .qr-cell.blank { background: #fff; }
+  </style>
+</head>
+<body class="bg-emerald-50 min-h-screen">
+  <header class="bg-emerald-700 text-white shadow-lg no-print">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold">📱 QR 碼生成器</h1>
+        <p class="text-sm opacity-80">選擇桌位 → 列印 → 貼桌上</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="admin.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">⚙️ 管理</a>
+        <button onclick="printAll()" class="text-sm bg-white text-emerald-700 px-4 py-1.5 rounded-full font-bold hover:bg-emerald-50 transition">🖨️ 列印</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-6">
+    <!-- Controls -->
+    <div class="bg-white rounded-2xl shadow-md p-4 mb-4 no-print">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-bold text-gray-700">選擇要列印的桌位</h2>
+        <div class="flex gap-2">
+          <button onclick="selectAll()" class="text-sm bg-emerald-600 text-white px-3 py-1.5 rounded-full hover:bg-emerald-700">✅ 全選</button>
+          <button onclick="selectNone()" class="text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full hover:bg-gray-300">清除</button>
+        </div>
+      </div>
+      <div id="table-toggles" class="grid grid-cols-5 md:grid-cols-8 gap-2">
+        <!-- 由 JS 渲染 -->
+      </div>
+      <div class="mt-3 text-sm text-gray-500">
+        已選: <span id="selected-count" class="font-bold text-emerald-700">0</span> 桌
+      </div>
+    </div>
+
+    <!-- QR Cards -->
+    <div id="qr-cards" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <!-- 由 JS 渲染選中的桌位 -->
+    </div>
+  </main>
+
+  <script src="common.js"></script>
+  <script>
+    const TOTAL_TABLES = 15;
+    let selected = new Set();
+
+    // 簡化版 QR code pattern (示範用, 非真實 QR 演算法)
+    function generateQRStyle(n) {
+      // 用 table number 生成 pseudo QR pattern (25x25)
+      const grid = [];
+      const seed = n * 7919; // 質數
+      for (let y = 0; y < 25; y++) {
+        for (let x = 0; x < 25; x++) {
+          const v = ((x * 31 + y * 37 + seed) * 1103515245 + 12345) & 0x7fffffff;
+          grid.push(v % 3 !== 0);
+        }
+      }
+      // 加上 3 個角的 finder pattern (標準 QR 結構)
+      function finder(px, py) {
+        for (let dy = 0; dy < 7; dy++) {
+          for (let dx = 0; dx < 7; dx++) {
+            const idx = (py + dy) * 25 + (px + dx);
+            if (idx >= 0 && idx < grid.length) {
+              const inBorder = dx === 0 || dx === 6 || dy === 0 || dy === 6;
+              const inCore = dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4;
+              grid[idx] = inBorder || inCore;
+            }
+          }
+        }
+      }
+      finder(0, 0); finder(18, 0); finder(0, 18);
+      return grid;
+    }
+
+    function renderToggles() {
+      const container = document.getElementById('table-toggles');
+      container.innerHTML = '';
+      for (let i = 1; i <= TOTAL_TABLES; i++) {
+        const btn = document.createElement('button');
+        btn.className = `p-3 rounded-lg font-bold text-sm border-2 transition ${selected.has(i) ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-400'}`;
+        btn.textContent = i;
+        btn.onclick = () => {
+          if (selected.has(i)) selected.delete(i);
+          else selected.add(i);
+          renderToggles();
+          renderQRCards();
+        };
+        container.appendChild(btn);
+      }
+      document.getElementById('selected-count').textContent = selected.size;
+    }
+
+    function renderQRCards() {
+      const container = document.getElementById('qr-cards');
+      if (selected.size === 0) {
+        container.innerHTML = '<div class="col-span-full text-center text-gray-400 py-12">請選擇桌位</div>';
+        return;
+      }
+      const sorted = [...selected].sort((a, b) => a - b);
+      container.innerHTML = sorted.map(n => {
+        const grid = generateQRStyle(n);
+        const url = `${location.origin}${location.pathname.replace('qr.html', '')}order.html?table=${n}`;
+        return `
+          <div class="qr-card bg-white rounded-2xl shadow-md p-4 text-center">
+            <div class="text-2xl font-black text-emerald-700 mb-2">桌 ${n}</div>
+            <div class="qr-pattern mx-auto w-32 h-32 mb-2">
+              ${grid.map(v => `<div class="qr-cell ${v ? '' : 'blank'}"></div>`).join('')}
+            </div>
+            <p class="text-xs text-gray-500 break-all">${url}</p>
+            <p class="text-xs text-emerald-600 mt-1">📱 掃碼點餐</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectAll() {
+      for (let i = 1; i <= TOTAL_TABLES; i++) selected.add(i);
+      renderToggles();
+      renderQRCards();
+    }
+
+    function selectNone() {
+      selected.clear();
+      renderToggles();
+      renderQRCards();
+    }
+
+    function printAll() {
+      if (selected.size === 0) {
+        showToast('請先選擇桌位', 'warning');
+        return;
+      }
+      window.print();
+    }
+
+    // Init
+    renderToggles();
+    renderQRCards();
+  </script>
+</body>
+</html>

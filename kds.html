@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>廚房看板 KDS — 山木小館</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    @keyframes newOrder { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .new-order { animation: newOrder 0.4s ease-out; }
+  </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+    <div class="px-4 py-3 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold">🍳 廚房看板 KDS</h1>
+        <p class="text-xs text-slate-400" id="stats">載入中...</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="toggleAudio()" id="audio-btn" class="text-sm bg-emerald-600 px-3 py-1.5 rounded-full hover:bg-emerald-700 transition">
+          🔔 音效: 開
+        </button>
+        <a href="pos.html" class="text-sm bg-slate-700 px-3 py-1.5 rounded-full hover:bg-slate-600 transition">🧾 POS</a>
+      </div>
+    </div>
+    <!-- Filter -->
+    <div class="px-4 pb-3 flex gap-2 overflow-x-auto">
+      <button data-filter="all" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-white">全部</button>
+      <button data-filter="pending" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">⏳ 待處理</button>
+      <button data-filter="preparing" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">🔥 製作中</button>
+      <button data-filter="ready" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">✅ 出餐</button>
+    </div>
+  </header>
+
+  <main class="p-4">
+    <div id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      <!-- 由 JS 渲染 -->
+    </div>
+    <div id="empty-state" class="text-center text-slate-500 py-20">
+      <div class="text-6xl mb-4">🍽️</div>
+      <p>目前沒有訂單</p>
+    </div>
+  </main>
+
+  <script src="common.js"></script>
+  <script>
+    let currentFilter = 'all';
+    let audioEnabled = true;
+    let lastOrderCount = 0;
+    let audioCtx = null;
+
+    // Web Audio API 提示音
+    function playBeep() {
+      if (!audioEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = 800;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } catch (e) {}
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById('audio-btn').textContent = `🔔 音效: ${audioEnabled ? '開' : '關'}`;
+    }
+
+    function getElapsed(iso) {
+      const ms = Date.now() - new Date(iso).getTime();
+      const m = Math.floor(ms / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      return `${m}分${s}秒`;
+    }
+
+    function renderOrders() {
+      const orders = getOrders().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
+
+      // 統計
+      const pending = orders.filter(o => o.status === 'pending').length;
+      const preparing = orders.filter(o => o.status === 'preparing').length;
+      const ready = orders.filter(o => o.status === 'ready').length;
+      document.getElementById('stats').textContent = `待處理 ${pending} · 製作中 ${preparing} · 出餐 ${ready} · 全部 ${orders.length}`;
+
+      // 檢查新訂單 (音效)
+      const newPending = orders.filter(o => o.status === 'pending').length;
+      if (newPending > lastOrderCount) playBeep();
+      lastOrderCount = newPending;
+
+      const grid = document.getElementById('orders-grid');
+      const empty = document.getElementById('empty-state');
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      const statusColors = {
+        pending: 'border-amber-500 bg-amber-900/20',
+        preparing: 'border-blue-500 bg-blue-900/20',
+        ready: 'border-emerald-500 bg-emerald-900/20',
+      };
+      const statusLabel = {
+        pending: '⏳ 待處理',
+        preparing: '🔥 製作中',
+        ready: '✅ 出餐',
+      };
+      grid.innerHTML = filtered.map(o => `
+        <div class="rounded-2xl border-2 ${statusColors[o.status] || 'border-slate-700 bg-slate-800'} p-4 ${o.status === 'pending' ? 'new-order' : ''}">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-2xl font-black">桌 ${o.table || '?'}</h3>
+              <p class="text-xs text-slate-400">#${o.id.slice(-6)} · ${getElapsed(o.created_at)}</p>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full bg-slate-700">${statusLabel[o.status]}</span>
+          </div>
+          <ul class="space-y-1 mb-3 text-sm">
+            ${o.items.map(i => `<li class="flex justify-between"><span>${i.name} × ${i.qty}</span><span class="text-slate-400">${formatPrice(i.price * i.qty)}</span></li>`).join('')}
+          </ul>
+          ${o.note ? `<p class="text-xs text-amber-300 mb-3">📝 ${o.note}</p>` : ''}
+          <div class="flex gap-2">
+            ${o.status === 'pending' ? `<button onclick="setStatus('${o.id}', 'preparing')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700">🔥 開始製作</button>` : ''}
+            ${o.status === 'preparing' ? `<button onclick="setStatus('${o.id}', 'ready')" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">✅ 出餐</button>` : ''}
+            ${o.status === 'ready' ? `<button onclick="setStatus('${o.id}', 'served')" class="flex-1 bg-slate-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-500">📤 已送出</button>` : ''}
+            <button onclick="del('${o.id}')" class="px-3 bg-red-600/30 text-red-300 rounded-lg text-sm hover:bg-red-600/50">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setStatus(id, status) {
+      updateOrderStatus(id, status);
+      showToast(`訂單已更新為 ${status}`, 'success');
+      renderOrders();
+    }
+
+    function del(id) {
+      showConfirm('刪除訂單', '確定要刪除這筆訂單嗎？', () => {
+        deleteOrder(id);
+        showToast('訂單已刪除', 'success');
+        renderOrders();
+      });
+    }
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        currentFilter = btn.dataset.filter;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('bg-slate-700', 'text-white');
+          b.classList.add('bg-slate-700', 'text-slate-300');
+        });
+        btn.classList.remove('text-slate-300');
+        btn.classList.add('text-white');
+        renderOrders();
+      };
+    });
+
+    // 3 秒自動刷新
+    renderOrders();
+    setInterval(renderOrders, 3000);
+  </script>
+</body>
+</html>
