@@ -8,25 +8,34 @@ const STORAGE_KEYS = {
 };
 
 // ===== FALLBACK 菜單 (當 localStorage 沒有時用) =====
+// 圖片皆為 DALL-E 真實生成，2026-06-02 全菜單升級
 const FALLBACK_MENU = [
-  { id: 'd001', category: '招牌菜', name: '翡翠綠炒飯', price: 180, image: 'https://files.catbox.moe/qhujx7.jpg', description: '招牌必點, 粒粒分明', available: true },
-  { id: 'd002', category: '招牌菜', name: '山木小館紅燒肉', price: 280, image: 'https://files.catbox.moe/4nen8u.jpg', description: '肥而不膩, 入味三分', available: true },
-  { id: 'd003', category: '招牌菜', name: '客家小炒', price: 220, image: 'https://files.catbox.moe/18ywl6.jpg', description: '傳統客家風味', available: true },
-  { id: 'd004', category: '熱炒', name: '宮保雞丁', price: 200, image: 'https://files.catbox.moe/qbez8z.jpg', description: '微辣開胃', available: true },
-  { id: 'd005', category: '熱炒', name: '蝦仁炒蛋', price: 240, image: 'https://files.catbox.moe/r6p2aa.jpg', description: '滑嫩爽口', available: true },
-  { id: 'd006', category: '熱炒', name: '回鍋肉', price: 220, image: 'https://files.catbox.moe/4nen8u.jpg', description: '川式經典', available: true },
-  { id: 'd007', category: '湯品', name: '酸辣湯', price: 80, image: 'https://files.catbox.moe/qckrp8.jpg', description: '開胃首選', available: true },
-  { id: 'd008', category: '湯品', name: '竹筍雞湯', price: 220, image: 'https://files.catbox.moe/scw4mh.jpg', description: '溫補養生', available: true },
-  { id: 'd009', category: '青菜', name: '清炒高麗菜', price: 100, image: 'https://files.catbox.moe/w4g70i.jpg', description: '清脆爽口', available: true },
-  { id: 'd010', category: '青菜', name: '蒜炒空心菜', price: 120, image: 'https://files.catbox.moe/trojpd.jpg', description: '蒜香十足', available: true },
-  { id: 'd011', category: '飯麵', name: '白飯', price: 20, image: 'https://files.catbox.moe/nyymq7.jpg', description: '', available: true },
-  { id: 'd012', category: '飯麵', name: '炒麵', price: 120, image: 'https://files.catbox.moe/55f5p7.jpg', description: '古早味', available: true },
-  { id: 'd013', category: '甜點', name: '紫米紅豆湯', price: 60, image: 'https://files.catbox.moe/x509m8.jpg', description: '飯後甜點', available: true },
-  { id: 'd014', category: '甜點', name: '芋圓豆花', price: 70, image: 'https://files.catbox.moe/xlpn23.jpg', description: '手工製作', available: true },
-  { id: 'd015', category: '飲料', name: '古早味紅茶', price: 40, image: 'https://files.catbox.moe/4ji8lb.jpg', description: '', available: true },
-  { id: 'd016', category: '飲料', name: '冬瓜茶', price: 40, image: 'https://files.catbox.moe/mehrea.jpg', description: '', available: true },
-  { id: 'd017', category: '飲料', name: '檸檬愛玉', price: 60, image: 'https://files.catbox.moe/4nlap7.jpg', description: '消暑聖品', available: true },
+  { id: 'd001', category: '招牌菜', name: '翡翠綠炒飯', price: 180, image: 'https://files.catbox.moe/lwbz5w.png', description: '招牌必點, 粒粒分明', available: true },
+  { id: 'd002', category: '招牌菜', name: '山木小館紅燒肉', price: 280, image: 'https://files.catbox.moe/5uemap.png', description: '肥而不膩, 入味三分', available: true },
+  { id: 'd003', category: '招牌菜', name: '客家小炒', price: 220, image: 'https://files.catbox.moe/n8prre.png', description: '傳統客家風味', available: true },
+  { id: 'd004', category: '熱炒', name: '宮保雞丁', price: 200, image: 'https://files.catbox.moe/is8qfr.png', description: '微辣開胃', available: true },
+  { id: 'd005', category: '熱炒', name: '蝦仁炒蛋', price: 240, image: 'https://files.catbox.moe/xevv8d.png', description: '滑嫩爽口', available: true },
+  { id: 'd006', category: '熱炒', name: '回鍋肉', price: 220, image: 'https://files.catbox.moe/bmck78.png', description: '川式經典', available: true },
+  { id: 'd007', category: '湯品', name: '酸辣湯', price: 80, image: 'https://files.catbox.moe/74vhb0.png', description: '開胃首選', available: true },
+  { id: 'd008', category: '湯品', name: '竹筍雞湯', price: 220, image: 'https://files.catbox.moe/zl2avx.png', description: '溫補養生', available: true },
+  { id: 'd009', category: '青菜', name: '清炒高麗菜', price: 100, image: 'https://files.catbox.moe/izdks1.png', description: '清脆爽口', available: true },
+  { id: 'd010', category: '青菜', name: '蒜炒空心菜', price: 120, image: 'https://files.catbox.moe/r3l3d0.png', description: '蒜香十足', available: true },
+  { id: 'd011', category: '飯麵', name: '白飯', price: 20, image: 'https://files.catbox.moe/uq5e0f.png', description: '蓬鬆香Q', available: true },
+  { id: 'd012', category: '飯麵', name: '炒麵', price: 120, image: 'https://files.catbox.moe/9hka3v.png', description: '古早味', available: true },
+  { id: 'd013', category: '甜點', name: '紫米紅豆湯', price: 60, image: 'https://files.catbox.moe/7a9lai.png', description: '飯後甜點', available: true },
+  { id: 'd014', category: '甜點', name: '芋圓豆花', price: 70, image: 'https://files.catbox.moe/lutdum.png', description: '手工製作', available: true },
+  { id: 'd015', category: '飲料', name: '古早味紅茶', price: 40, image: 'https://files.catbox.moe/fdrcp0.png', description: '清涼解渴', available: true },
+  { id: 'd016', category: '飲料', name: '冬瓜茶', price: 40, image: 'https://files.catbox.moe/obenat.png', description: '古早甜味', available: true },
+  { id: 'd017', category: '飲料', name: '檸檬愛玉', price: 60, image: 'https://files.catbox.moe/sfr6b0.png', description: '消暑聖品', available: true },
 ];
+
+// ===== 品牌資源 (Logo / Hero / 環境) =====
+const BRAND_ASSETS = {
+  logo: 'https://files.catbox.moe/so3th5.png',          // 山木小館_Logo
+  logoMark: 'https://files.catbox.moe/dm5547.png',      // 山木小館_標誌圖
+  hero: 'https://files.catbox.moe/mapqkc.png',          // 餐廳封面_招牌炒飯
+  env: 'https://files.catbox.moe/kl714n.png',           // 餐廳環境內景
+};
 
 // ===== 初始化 =====
 function initStorage() {

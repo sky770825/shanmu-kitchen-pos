@@ -14,9 +14,12 @@
   <!-- Header -->
   <header class="bg-emerald-600 text-white sticky top-0 z-40 shadow-lg">
     <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div>
-        <h1 class="text-xl font-bold">🍃 山木小館</h1>
-        <p class="text-sm opacity-90" id="table-info">線上點餐</p>
+      <div class="flex items-center gap-3">
+        <img src="https://files.catbox.moe/dm5547.png" alt="山木小館" class="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-white/30">
+        <div>
+          <h1 class="text-xl font-bold">🍃 山木小館</h1>
+          <p class="text-sm opacity-90" id="table-info">線上點餐</p>
+        </div>
       </div>
       <a href="index.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">
         ← 回首頁
@@ -105,7 +108,11 @@
         return `
           <div class="bg-white rounded-2xl p-4 shadow-sm flex gap-3 items-center">
             <div class="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
-              ${dish.image ? `<img src="${dish.image}" class="w-full h-full object-cover rounded-xl">` : '🍽️'}
+              ${dish.image 
+              ? (dish.image.startsWith('http') 
+                  ? `<img src="${dish.image}" class="w-full h-full object-cover rounded-xl">` 
+                  : `<div class="w-full h-full flex items-center justify-center text-2xl">${dish.image}</div>`)
+              : `<div class="w-full h-full flex items-center justify-center text-2xl">🍽️</div>`}}
             </div>
             <div class="flex-1 min-w-0">
               <h3 class="font-bold text-gray-800 truncate">${dish.name}</h3>
