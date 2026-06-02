@@ -14,22 +14,22 @@
   <header class="bg-emerald-700 text-white shadow-lg sticky top-0 z-50">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div>
-        <h1 class="text-lg font-bold">📋 訂單歷史</h1>
+        <h1 class="text-lg font-bold">訂單歷史</h1>
         <p class="text-xs opacity-80" id="stats">載入中...</p>
       </div>
       <div class="flex gap-2">
-        <a href="pos.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">🧾 POS</a>
-        <a href="kds.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">🍳 KDS</a>
-        <a href="index.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">🏠</a>
+        <a href="pos.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">POS</a>
+        <a href="kds.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">KDS</a>
+        <a href="index.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30">回首頁</a>
       </div>
     </div>
     <div class="max-w-5xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto">
       <button data-filter="all" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-white text-emerald-700">全部</button>
-      <button data-filter="today" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">📅 今天</button>
-      <button data-filter="pending" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">⏳ 待處理</button>
-      <button data-filter="preparing" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">🔥 製作中</button>
-      <button data-filter="ready" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">✅ 出餐</button>
-      <button data-filter="served" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">📤 已送出</button>
+      <button data-filter="today" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">今天</button>
+      <button data-filter="pending" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">待處理</button>
+      <button data-filter="preparing" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">製作中</button>
+      <button data-filter="ready" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">出餐</button>
+      <button data-filter="served" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">已送出</button>
     </div>
   </header>
 
@@ -39,7 +39,7 @@
         共 <span id="total-count" class="font-bold text-emerald-700">0</span> 筆 ·
         總額 <span id="total-amount" class="font-bold text-emerald-700">$0</span>
       </h2>
-      <button onclick="exportCSV()" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-full hover:bg-emerald-700">📥 匯出 CSV</button>
+      <button onclick="exportCSV()" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-full hover:bg-emerald-700">匯出 CSV</button>
     </div>
     <div id="orders-list" class="space-y-2"></div>
     <div id="empty-state" class="text-center text-gray-400 py-20 hidden">
@@ -71,12 +71,19 @@
 
     function getStatusLabel(s) {
       return {
-        pending: '⏳ 待處理',
-        preparing: '🔥 製作中',
-        ready: '✅ 出餐',
-        served: '📤 已送出',
+        pending: '待處理',
+        preparing: '製作中',
+        ready: '出餐',
+        served: '已送出',
       }[s] || s;
     }
+
+    const statusIcon = {
+      pending: '●',
+      preparing: '◐',
+      ready: '✓',
+      served: '◉',
+    };
 
     function getStatusColor(s) {
       return {
@@ -128,14 +135,15 @@
             <ul class="space-y-1 text-sm mb-2">
               ${o.items.map(i => `<li class="flex justify-between"><span class="truncate">${i.name} × ${i.qty}</span><span class="text-gray-500">${formatPrice(i.price * i.qty)}</span></li>`).join('')}
             </ul>
-            ${o.note ? `<p class="text-xs text-amber-700 mb-2">📝 ${o.note}</p>` : ''}
+            ${o.note ? `<p class="text-xs text-amber-700 mb-2">備註: ${o.note}</p>` : ''}
             <div class="flex items-center justify-between text-xs text-gray-500">
               <span>#${o.id.slice(-6)} · ${new Date(o.created_at).toLocaleString('zh-TW')}</span>
               <div class="flex gap-2">
-                ${o.status === 'pending' ? `<button onclick="changeStatus('${o.id}', 'preparing')" class="text-blue-600 hover:underline">🔥 製作</button>` : ''}
-                ${o.status === 'preparing' ? `<button onclick="changeStatus('${o.id}', 'ready')" class="text-emerald-600 hover:underline">✅ 出餐</button>` : ''}
-                ${o.status === 'ready' ? `<button onclick="changeStatus('${o.id}', 'served')" class="text-gray-600 hover:underline">📤 送出</button>` : ''}
-                <button onclick="delOrder('${o.id}')" class="text-red-500 hover:underline">🗑 刪除</button>
+                ${o.status === 'pending' ? `<button onclick="changeStatus('${o.id}', 'preparing')" class="text-blue-600 hover:underline">→製作</button>` : ''}
+                ${o.status === 'preparing' ? `<button onclick="changeStatus('${o.id}', 'ready')" class="text-blue-600 hover:underline">→出餐</button>` : ''}
+                ${o.status === 'ready' ? `<button onclick="changeStatus('${o.id}', 'served')" class="text-emerald-600 hover:underline">→送出</button>` : ''}
+                ${o.status === 'served' ? `<button onclick="changeStatus('${o.id}', 'pending')" class="text-amber-600 hover:underline">→開新單</button>` : ''}
+                <button onclick="delOrder('${o.id}')" class="text-red-500 hover:underline">刪除</button>
               </div>
             </div>
           </div>
