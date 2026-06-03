@@ -159,12 +159,12 @@ function renderOrders() {
  </ul>
  ${o.note ? `<p class="text-xs text-amber-300 mb-3 whitespace-pre-wrap">備註: ${o.note}</p>` : ''}
   <div class="flex gap-2">
-   ${o.status === 'pending' ? `<button onclick="setStatus('${o.id}', 'preparing')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700">開始製作</button>` : ''}
-   ${o.status === 'preparing' ? `<button onclick="setStatus('${o.id}', 'ready')" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">出餐</button>` : ''}
-   ${o.status === 'ready' ? `<button onclick="setStatus('${o.id}', 'served')" class="flex-1 bg-slate-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-500">已送出</button>` : ''}
-   ${o.status === 'served' ? `<button onclick="checkout('${o.id}')" class="flex-1 bg-amber-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-amber-700">結帳離開</button><button onclick="setStatus('${o.id}', 'pending')" class="px-3 bg-amber-600/30 text-amber-300 rounded-lg text-sm hover:bg-amber-600/50">重開</button>` : ''}
-   ${o.status === 'paid' ? `<span class="flex-1 text-center text-slate-500 text-sm py-2">已結帳 · ${getElapsed(o.paid_at || o.updated_at || o.created_at)}前</span>` : ''}
-   <button onclick="del('${o.id}')" class="px-3 bg-red-600/30 text-red-300 rounded-lg text-sm hover:bg-red-600/50">刪除</button>
+   ${o.status === 'pending' ? `<button onclick="setStatus('${o.id}', 'preparing')" class="flex-1 bg-blue-600 text-white min-h-[52px] rounded-lg text-base font-bold hover:bg-blue-700">開始製作</button>` : ''}
+   ${o.status === 'preparing' ? `<button onclick="setStatus('${o.id}', 'ready')" class="flex-1 bg-emerald-600 text-white min-h-[52px] rounded-lg text-base font-bold hover:bg-emerald-700">出餐</button>` : ''}
+   ${o.status === 'ready' ? `<button onclick="setStatus('${o.id}', 'served')" class="flex-1 bg-slate-600 text-white min-h-[52px] rounded-lg text-base font-bold hover:bg-slate-500">已送出</button>` : ''}
+   ${o.status === 'served' ? `<button onclick="checkout('${o.id}')" class="flex-1 bg-amber-600 text-white min-h-[52px] rounded-lg text-base font-bold hover:bg-amber-700">結帳離開</button><button onclick="setStatus('${o.id}', 'pending')" class="px-4 min-h-[52px] bg-amber-600/30 text-amber-300 rounded-lg text-sm font-medium hover:bg-amber-600/50">重開</button>` : ''}
+   ${o.status === 'paid' ? `<span class="flex-1 text-center text-slate-500 text-sm py-3">已結帳 · ${getElapsed(o.paid_at || o.updated_at || o.created_at)}前</span>` : ''}
+   <button onclick="del('${o.id}')" class="px-3 min-h-[44px] bg-red-900/40 text-red-400 border border-red-700 rounded-lg text-sm hover:bg-red-900/60">刪除</button>
   </div>
  </div>
  `).join('');

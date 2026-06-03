@@ -56,18 +56,18 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple C
 </head>
 <body class="bg-gray-100 min-h-screen">
  <!-- Header -->
- <header class="bg-emerald-700 text-white shadow-lg">
- <div class="px-4 py-3 flex items-center justify-between">
- <div>
- <h1 class="text-lg font-bold"> POS 點餐</h1>
- <p class="text-xs opacity-80" id="header-info">點擊桌位開始點餐</p>
- </div>
- <div class="flex gap-2">
- <a href="kds.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition"> 廚房</a>
- <a href="admin.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">️</a>
- </div>
- </div>
- </header>
+    <header class="bg-emerald-700 text-white shadow-lg">
+      <div class="px-4 py-3 flex items-center justify-between">
+        <div>
+          <h1 class="text-lg font-bold"> POS 點餐</h1>
+          <p class="text-xs opacity-80" id="header-info">點擊桌位開始點餐</p>
+        </div>
+        <div class="flex gap-2">
+          <a href="kds.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition"> 廚房</a>
+          <a href="admin.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">️</a>
+        </div>
+      </div>
+    </header>
 
  <!-- Mobile: Bottom sheet for cart -->
  <div id="bottom-sheet" class="hidden md:hidden fixed inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-2xl z-40 max-h-[70vh] overflow-y-auto">
@@ -87,18 +87,22 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple C
 
  <!-- Desktop layout -->
  <div class="flex md:flex-row flex-col h-[calc(100vh-58px)]">
- <!-- Left: 桌位地圖 -->
- <aside class="md:w-64 bg-white md:border-r border-b md:border-b-0 overflow-y-auto p-4">
- <h2 class="font-bold text-gray-700 mb-3 text-sm"> 桌位地圖 (15 桌)</h2>
- <div class="grid grid-cols-3 md:grid-cols-2 gap-2" id="tables-grid">
- <!-- 由 JS 渲染 -->
- </div>
- <div class="mt-4 pt-4 border-t text-xs text-gray-500 space-y-1">
- <p> 空桌</p>
- <p> 有訂單 (未送出)</p>
- <p> 已送出 (廚房處理中)</p>
- </div>
- </aside>
+  <!-- Left: 桌位地圖 -->
+  <aside class="md:w-64 bg-white md:border-r border-b md:border-b-0 overflow-y-auto p-4">
+    <h2 class="font-bold text-gray-700 mb-3 text-sm"> 桌位地圖 (15 桌)</h2>
+    <div class="grid grid-cols-3 md:grid-cols-2 gap-2" id="tables-grid">
+    <!-- 由 JS 渲染 -->
+    </div>
+    <!-- Phase 2-A: 桌號 carousel dot 指示器 (手機版) -->
+    <div id="tables-dots" class="md:hidden flex justify-center gap-1.5 mt-2" aria-label="桌號頁碼指示">
+      <!-- 由 JS 動態生成 -->
+    </div>
+    <div class="mt-4 pt-4 border-t text-xs text-gray-500 space-y-1">
+      <p> 空桌</p>
+      <p> 有訂單 (未送出)</p>
+      <p> 已送出 (廚房處理中)</p>
+    </div>
+  </aside>
 
  <!-- Middle: 菜單 -->
  <main class="flex-1 overflow-y-auto p-4">
@@ -153,11 +157,11 @@ function getTableStatus(tableNum) {
   return 'empty';
 }
 
- function renderTables() {
- const grid = document.getElementById('tables-grid');
- grid.innerHTML = '';
- for (let i = 1; i <= TOTAL_TABLES; i++) {
- const status = getTableStatus(i);
+function renderTables() {
+  const grid = document.getElementById('tables-grid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= TOTAL_TABLES; i++) {
+    const status = getTableStatus(i);
     const colors = {
       empty: 'bg-emerald-100 text-emerald-700 border-emerald-300',
       pending: 'bg-amber-100 text-amber-800 border-amber-300',
@@ -168,10 +172,54 @@ function getTableStatus(tableNum) {
     const btn = document.createElement('button');
     btn.className = `table-btn p-3 rounded-lg border-2 font-bold text-sm ${colors[status]} ${selectedTable === i ? 'active' : ''} ${status !== 'empty' ? 'has-order' : ''}`;
     btn.innerHTML = `${i}<br><span class="text-[10px] font-normal">${status === 'empty' ? '空' : status === 'pending' ? '待送' : status === 'preparing' ? '廚房' : status === 'eating' ? '用餐' : '完成'}</span>`;
- btn.onclick = () => selectTable(i);
- grid.appendChild(btn);
- }
- }
+    btn.onclick = () => selectTable(i);
+    grid.appendChild(btn);
+  }
+  // Phase 2-A: 渲染 carousel dot 指示器 (手機版)
+  renderTableDots();
+}
+
+function renderTableDots() {
+  const dots = document.getElementById('tables-dots');
+  if (!dots) return;
+  // 計算頁數: 15 桌 / 一頁 3.5 顆 = 5 頁 (round up)
+  const dotsPerPage = 3.5;
+  const pageCount = Math.ceil(TOTAL_TABLES / dotsPerPage);
+  dots.innerHTML = '';
+  for (let i = 0; i < pageCount; i++) {
+    const dot = document.createElement('button');
+    dot.className = 'w-2 h-2 rounded-full bg-gray-300 transition-all';
+    dot.dataset.page = i;
+    dot.setAttribute('aria-label', `第 ${i+1} 頁桌號`);
+    dot.onclick = () => {
+      const grid = document.getElementById('tables-grid');
+      const btnWidth = grid.querySelector('.table-btn')?.offsetWidth || 100;
+      const gap = 8;
+      const scrollX = i * (btnWidth + gap) * 3;
+      grid.scrollTo({ left: scrollX, behavior: 'smooth' });
+    };
+    dots.appendChild(dot);
+  }
+  // 同步當前頁高亮
+  syncActiveDot();
+}
+
+// 監聽 carousel 滾動, 同步 dot 高亮
+function syncActiveDot() {
+  const grid = document.getElementById('tables-grid');
+  const dots = document.querySelectorAll('#tables-dots button');
+  if (!grid || dots.length === 0) return;
+  const btnWidth = grid.querySelector('.table-btn')?.offsetWidth || 100;
+  const gap = 8;
+  const currentPage = Math.round(grid.scrollLeft / ((btnWidth + gap) * 3));
+  dots.forEach((dot, i) => {
+    if (i === currentPage) {
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-600 w-5 transition-all';
+    } else {
+      dot.className = 'w-2 h-2 rounded-full bg-gray-300 transition-all';
+    }
+  });
+}
 
 function selectTable(n) {
   selectedTable = n;
@@ -264,35 +312,93 @@ function selectTable(n) {
  document.getElementById('sheet-total').textContent = formatPrice(total);
  }
 
- function submit() {
- if (!selectedTable) { showToast('請先選擇桌位', 'warning'); return; }
- if (Object.keys(cart).length === 0) { showToast('尚未點餐', 'warning'); return; }
- const items = Object.values(cart).map(c => ({ dish_id: c.dish.id, qty: c.qty, name: c.dish.name, price: c.dish.price }));
- const note = document.getElementById('note-input')?.value || '';
- const order = createOrder(selectedTable, items, note);
- // B1: 結帳跳 KDS 詢問
- const info = `桌 ${selectedTable} · ${items.length} 項 · ${formatPrice(order.total)}`;
- if (confirm(` 訂單已送出！${info}\n\n點確定跳 KDS 看廚房狀態\n點取消繼續點下一桌`)) {
- location.href = `kds.html#table=${selectedTable}`;
- } else {
- showToast(`桌 ${selectedTable} 訂單 ${order.id.slice(-6)} 已記錄`, 'info', 2000);
- }
- cart = {};
- closeSheet();
- renderDishes();
- renderCart();
- renderTables();
- }
+function submit() {
+  if (!selectedTable) { showToast('請先選擇桌位', 'warning'); return; }
+  if (Object.keys(cart).length === 0) { showToast('尚未點餐', 'warning'); return; }
+  const items = Object.values(cart).map(c => ({ dish_id: c.dish.id, qty: c.qty, name: c.dish.name, price: c.dish.price }));
+  const note = document.getElementById('note-input')?.value || '';
+  const order = createOrder(selectedTable, items, note);
+  // Phase 2-C: 結帳 2 步流程 (Step 1: 確認訂單)
+  showCheckoutStep1(order);
+}
+
+function showCheckoutStep1(order) {
+  // 移除舊 modal
+  const old = document.getElementById('__checkout_modal');
+  if (old) old.remove();
+  
+  const itemsHtml = order.items.map(i => 
+    `<div class="flex justify-between py-1.5 text-sm">
+      <span>${i.name} × ${i.qty}</span>
+      <span class="font-bold">${formatPrice(i.price * i.qty)}</span>
+    </div>`
+  ).join('');
+  
+  const modal = document.createElement('div');
+  modal.id = '__checkout_modal';
+  modal.className = 'fixed inset-0 bg-black/60 z-[9998] flex items-end md:items-center justify-center md:p-4';
+  modal.innerHTML = `
+    <div class="bg-white rounded-t-3xl md:rounded-2xl max-w-md w-full shadow-2xl">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xl font-black text-gray-800">送出訂單確認</h3>
+          <button onclick="document.getElementById('__checkout_modal').remove()" class="text-gray-400 text-2xl min-w-[44px] min-h-[44px]">×</button>
+        </div>
+        <div class="bg-emerald-50 rounded-xl p-3 mb-3 text-center">
+          <p class="text-xs text-gray-500">桌 ${order.table} · ${order.items.length} 項</p>
+          <p class="text-3xl font-black text-emerald-700 mt-1">${formatPrice(order.total)}</p>
+        </div>
+        <div class="border-t border-b py-2 my-3 max-h-40 overflow-y-auto">
+          ${itemsHtml}
+        </div>
+        <p class="text-xs text-gray-500 text-center mb-3">確認送出後, 訂單會送到 KDS 廚房看板</p>
+        <div class="flex gap-2">
+          <button onclick="document.getElementById('__checkout_modal').remove(); cart={}; closeSheet(); renderDishes(); renderCart(); renderTables();" 
+                  class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold min-h-[48px]">
+            取消
+          </button>
+          <button onclick="confirmCheckout()" 
+                  class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold min-h-[48px] hover:bg-emerald-700">
+            確認送出
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function confirmCheckout() {
+  // 找剛才建立的訂單 (last order)
+  const orders = getOrders();
+  const lastOrder = orders[orders.length - 1];
+  document.getElementById('__checkout_modal').remove();
+  if (lastOrder) {
+    showToast(`桌 ${lastOrder.table} 訂單 ${lastOrder.id.slice(-6)} 已送出, 廚房收到`, 'success', 2500);
+  }
+  cart = {};
+  closeSheet();
+  renderDishes();
+  renderCart();
+  renderTables();
+}
 
  function closeSheet() {
  document.getElementById('bottom-sheet').classList.add('hidden');
  }
 
- // Init
- renderTables();
- renderCategoryFilter();
- renderDishes();
- renderCart();
+// Init
+renderTables();
+renderCategoryFilter();
+renderDishes();
+renderCart();
+
+// Phase 2-A: 桌號 carousel 滾動監聽, 同步 dot 高亮
+document.getElementById('tables-grid')?.addEventListener('scroll', syncActiveDot, { passive: true });
+// Resize 也重算 dot (按鈕寬度變)
+window.addEventListener('resize', () => {
+  renderTableDots();
+}, { passive: true });
 
  // 點擊 main 區域時顯示 mobile sheet
  document.getElementById('dishes-grid').addEventListener('click', () => {
