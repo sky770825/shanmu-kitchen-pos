@@ -5,13 +5,54 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>POS 點餐系統 — 山木小館</title>
  <script src="https://cdn.tailwindcss.com"></script>
- <style>
- body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
- .emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Twemoji Mozilla", sans-serif; }
- .table-btn { transition: all 0.15s; }
- .table-btn.active { background: #047857; color: white; }
- .table-btn.has-order { box-shadow: 0 0 0 3px #fbbf24; }
- </style>
+<style>
+body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Twemoji Mozilla", sans-serif; }
+.table-btn { transition: all 0.15s; }
+.table-btn.active { background: #047857; color: white; }
+.table-btn.has-order { box-shadow: 0 0 0 3px #fbbf24; }
+
+/* === Mobile: 桌號橫向 Carousel (Phase B-2 2026-06-03) === */
+@media (max-width: 767px) {
+  /* 桌號 aside 改為橫向滾動條 */
+  aside.md\:w-64 {
+    width: 100% !important;
+    padding: 8px 12px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    max-height: 95px;
+    overflow-y: visible;
+  }
+  /* 桌號 grid → 水平 flex carousel */
+  #tables-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  #tables-grid::-webkit-scrollbar { display: none; }
+  /* 每顆桌號卡: 固定寬度, snap 對齊 */
+  #tables-grid .table-btn {
+    flex: 0 0 auto;
+    width: calc((100vw - 56px) / 3.5);
+    min-width: 90px;
+    max-width: 110px;
+    padding: 10px 6px !important;
+    font-size: 13px !important;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+  /* 桌號圖例: 手機版省略 */
+  aside.md\:w-64 .mt-4.pt-4.border-t { display: none; }
+  /* 標題縮小 */
+  aside.md\:w-64 h2 { font-size: 11px !important; margin-bottom: 4px !important; }
+  /* 主內容區域預留底部空間給 bottom sheet */
+  main.flex-1 { padding-bottom: 80px; }
+}
+</style>
 </head>
 <body class="bg-gray-100 min-h-screen">
  <!-- Header -->
@@ -119,14 +160,21 @@
  }
  }
 
- function selectTable(n) {
- selectedTable = n;
- document.getElementById('header-info').textContent = `桌位 ${n} · 點餐中`;
- document.getElementById('cart-title').textContent = `桌位 ${n} 訂單`;
- document.getElementById('sheet-title').textContent = `桌位 ${n} 訂單`;
- renderTables();
- renderCart();
- }
+function selectTable(n) {
+  selectedTable = n;
+  document.getElementById('header-info').textContent = `桌位 ${n} · 點餐中`;
+  document.getElementById('cart-title').textContent = `桌位 ${n} 訂單`;
+  document.getElementById('sheet-title').textContent = `桌位 ${n} 訂單`;
+  renderTables();
+  renderCart();
+  // Mobile: 自動滾動到選中桌號 (Phase B-2)
+  if (window.innerWidth < 768) {
+    const btns = document.querySelectorAll('#tables-grid .table-btn');
+    if (btns[n-1]) {
+      btns[n-1].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }
+}
 
  function renderCategoryFilter() {
  const menu = getMenu();
