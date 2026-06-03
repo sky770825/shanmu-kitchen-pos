@@ -250,25 +250,30 @@ function selectTable(n) {
  });
  }
 
- function renderDishes() {
- const menu = getMenu().filter(d => d.available !== false);
- const filtered = currentCat === 'all' ? menu : menu.filter(d => d.category === currentCat);
- document.getElementById('dishes-grid').innerHTML = filtered.map(dish => {
- const qty = cart[dish.id]?.qty || 0;
- return `
- <div class="bg-white rounded-xl p-3 shadow-sm flex gap-2 items-center">
- <div class="flex-1 min-w-0">
- <p class="font-bold text-sm truncate">${dish.name}</p>
- <p class="text-emerald-700 text-sm font-bold">${formatPrice(dish.price)}</p>
- </div>
- <div class="flex items-center gap-1">
- ${qty > 0 ? `<button onclick="upd('${dish.id}', -1)" class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 font-bold">−</button><span class="w-5 text-center font-bold text-sm">${qty}</span>` : ''}
- <button onclick="upd('${dish.id}', 1)" class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold">+</button>
- </div>
- </div>
- `;
- }).join('');
- }
+function renderDishes() {
+  const menu = getMenu().filter(d => d.available !== false);
+  const filtered = currentCat === 'all' ? menu : menu.filter(d => d.category === currentCat);
+  document.getElementById('dishes-grid').innerHTML = filtered.map(dish => {
+    const qty = cart[dish.id]?.qty || 0;
+    // Phase 3-E: 菜品縮圖 (用 catbox 圖, 圖像優勢效應 +40% 辨識速度)
+    const imgHtml = dish.image && dish.image.startsWith('http')
+      ? `<img src="${dish.image}" alt="${dish.name}" loading="lazy" class="w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover flex-shrink-0 bg-emerald-50">`
+      : `<div class="w-12 h-12 md:w-14 md:h-14 rounded-lg bg-emerald-100 flex items-center justify-center text-2xl flex-shrink-0"></div>`;
+    return `
+    <div class="bg-white rounded-xl p-2 md:p-3 shadow-sm flex gap-2 items-center">
+      ${imgHtml}
+      <div class="flex-1 min-w-0">
+        <p class="font-bold text-sm truncate">${dish.name}</p>
+        <p class="text-emerald-700 text-sm font-bold">${formatPrice(dish.price)}</p>
+      </div>
+      <div class="flex items-center gap-1">
+        ${qty > 0 ? `<button onclick="upd('${dish.id}', -1)" class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold">−</button><span class="w-5 text-center font-bold text-sm">${qty}</span>` : ''}
+        <button onclick="upd('${dish.id}', 1)" class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-emerald-600 text-white font-bold">+</button>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
 
  function upd(id, delta) {
  const menu = getMenu();

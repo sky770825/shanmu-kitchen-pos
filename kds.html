@@ -8,9 +8,16 @@
  <style>
  body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
  .emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Twemoji Mozilla", sans-serif; }
- @keyframes newOrder { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
- .new-order { animation: newOrder 0.4s ease-out; }
- </style>
+ .new-order { animation: slide-in 0.3s ease-out; }
+ @keyframes slide-in { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+ /* Phase 3-D: 逾時警示 (業界 Toast/Square 標準) */
+ .elapsed-warning { color: #fbbf24 !important; font-weight: 700; animation: blink-warning 1.5s ease-in-out infinite; }
+ .elapsed-critical { color: #f87171 !important; font-weight: 700; animation: pulse-critical 1s ease-in-out infinite; }
+ @keyframes blink-warning { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+ @keyframes pulse-critical { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+ .order-card-warning { border-color: #f59e0b !important; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3); }
+ .order-card-critical { border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4); animation: pulse-critical 1s ease-in-out infinite; }
+</style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen">
  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
@@ -79,15 +86,26 @@
  document.getElementById('audio-btn').textContent = ` 音效: ${audioEnabled ? '開' : '關'}`;
  }
 
- function getElapsed(iso) {
- const ms = Date.now() - new Date(iso).getTime();
- const m = Math.floor(ms / 60000);
- const s = Math.floor((ms % 60000) / 1000);
- return `${m}分${s}秒`;
- }
+function getElapsed(iso) {
+  const ms = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(ms / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return { text: `${m}分${s}秒`, minutes: m };
+}
+
+// Phase 3-D: 逾時分級 (業界 Toast/Square 標準)
+// < 10 分鐘: normal (slate-400)
+// 10-20 分鐘: warning (amber + 閃爍)
+// > 20 分鐘: critical (red + 脈衝)
+function getElapsedLevel(minutes) {
+  if (minutes >= 20) return 'critical';
+  if (minutes >= 10) return 'warning';
+  return 'normal';
+}
 
 function renderOrders() {
   const orders = getOrders().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  // Phase 3-D: 應用逾時警示 class
   const filtered = (() => {
      if (currentFilter === 'all') {
        // 預設隱藏已出餐 (ready)、已送出 (served)、已結帳 (paid), 只看進行中
@@ -99,6 +117,9 @@ function renderOrders() {
      }
      return orders.filter(o => o.status === currentFilter);
    })();
+
+  // Phase 3-D: 渲染後, 即時套用逾時 class
+  setTimeout(() => updateElapseAlerts(), 0);
 
  // 統計
  const pending = orders.filter(o => o.status === 'pending').length;
@@ -145,11 +166,11 @@ function renderOrders() {
  };
  grid.innerHTML = filtered.map(o => `
  <div class="rounded-2xl border-2 ${statusColors[o.status] || 'border-slate-700 bg-slate-800'} p-4 ${o.status === 'pending' ? 'new-order' : ''}">
- <div class="flex items-center justify-between mb-3">
- <div>
- <h3 class="text-2xl font-black">桌 ${o.table || '?'}</h3>
- <p class="text-xs text-slate-400">#${o.id.slice(-6)} · ${getElapsed(o.created_at)}</p>
- </div>
+  <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="text-2xl font-black">桌 ${o.table || '?'}</h3>
+          <p class="text-xs text-slate-400" data-elapsed="${o.created_at}">#${o.id.slice(-6)} · ${getElapsed(o.created_at).text}</p>
+        </div>
  <span class="text-xs px-3 py-1 rounded-full bg-slate-700 ${statusColor[o.status] || ''} font-medium">
  <span class="mr-1">${statusIcon[o.status] || '·'}</span>${statusLabel[o.status] || o.status}
  </span>
@@ -163,7 +184,7 @@ function renderOrders() {
    ${o.status === 'preparing' ? `<button onclick="setStatus('${o.id}', 'ready')" class="flex-1 bg-emerald-600 text-white min-h-[52px] rounded-lg text-base font-bold hover:bg-emerald-700">出餐</button>` : ''}
    ${o.status === 'ready' ? `<button onclick="setStatus('${o.id}', 'served')" class="flex-1 bg-slate-600 text-white min-h-[52px] rounded-lg text-base font-bold hover:bg-slate-500">已送出</button>` : ''}
    ${o.status === 'served' ? `<button onclick="checkout('${o.id}')" class="flex-1 bg-amber-600 text-white min-h-[52px] rounded-lg text-base font-bold hover:bg-amber-700">結帳離開</button><button onclick="setStatus('${o.id}', 'pending')" class="px-4 min-h-[52px] bg-amber-600/30 text-amber-300 rounded-lg text-sm font-medium hover:bg-amber-600/50">重開</button>` : ''}
-   ${o.status === 'paid' ? `<span class="flex-1 text-center text-slate-500 text-sm py-3">已結帳 · ${getElapsed(o.paid_at || o.updated_at || o.created_at)}前</span>` : ''}
+   ${o.status === 'paid' ? `<span class="flex-1 text-center text-slate-500 text-sm py-3">已結帳 · ${getElapsed(o.paid_at || o.updated_at || o.created_at).text}前</span>` : ''}
    <button onclick="del('${o.id}')" class="px-3 min-h-[44px] bg-red-900/40 text-red-400 border border-red-700 rounded-lg text-sm hover:bg-red-900/60">刪除</button>
   </div>
  </div>
@@ -212,9 +233,38 @@ function checkout(id) {
  };
  });
 
- // 3 秒自動刷新
- renderOrders();
- setInterval(renderOrders, 3000);
+// 3 秒自動刷新
+renderOrders();
+setInterval(renderOrders, 3000);
+
+// Phase 3-D: 每秒更新逾時警示 (不重建整個訂單卡, 只更新 class)
+setInterval(updateElapseAlerts, 1000);
+
+function updateElapseAlerts() {
+  // 更新所有 data-elapsed 元素的 class
+  document.querySelectorAll('[data-elapsed]').forEach(el => {
+    const iso = el.dataset.elapsed;
+    const { text, minutes } = getElapsed(iso);
+    // 更新文字
+    const orderId = el.closest('.rounded-2xl')?.querySelector('h3')?.textContent;
+    if (el.textContent.includes('#')) {
+      const idMatch = el.textContent.match(/#\S+/);
+      el.textContent = `${idMatch ? idMatch[0] + ' · ' : ''}${text}`;
+    }
+    // 套用逾時 class
+    el.classList.remove('elapsed-warning', 'elapsed-critical');
+    const level = getElapsedLevel(minutes);
+    if (level === 'warning') el.classList.add('elapsed-warning');
+    if (level === 'critical') el.classList.add('elapsed-critical');
+    // 卡片邊框
+    const card = el.closest('.rounded-2xl');
+    if (card) {
+      card.classList.remove('order-card-warning', 'order-card-critical');
+      if (level === 'warning') card.classList.add('order-card-warning');
+      if (level === 'critical') card.classList.add('order-card-critical');
+    }
+  });
+}
  </script>
 </body>
 </html>
