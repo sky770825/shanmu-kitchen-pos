@@ -29,7 +29,8 @@
  <button data-filter="pending" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">待處理</button>
  <button data-filter="preparing" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">製作中</button>
  <button data-filter="ready" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">出餐</button>
- <button data-filter="served" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">已送出</button>
+  <button data-filter="served" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">已送出</button>
+  <button data-filter="paid" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-800/40 text-white">已結帳</button>
  </div>
  </header>
 
@@ -69,30 +70,33 @@
  return '剛剛';
  }
 
- function getStatusLabel(s) {
- return {
- pending: '待處理',
- preparing: '製作中',
- ready: '出餐',
- served: '已送出',
- }[s] || s;
- }
+function getStatusLabel(s) {
+  return {
+    pending: '待處理',
+    preparing: '製作中',
+    ready: '出餐',
+    served: '已送出',
+    paid: '已結帳',
+  }[s] || s;
+}
 
- const statusIcon = {
- pending: '●',
- preparing: '◐',
- ready: '',
- served: '◉',
- };
+const statusIcon = {
+  pending: '●',
+  preparing: '◐',
+  ready: '',
+  served: '◉',
+  paid: '✓',
+};
 
- function getStatusColor(s) {
- return {
- pending: 'border-amber-400 bg-amber-50',
- preparing: 'border-blue-400 bg-blue-50',
- ready: 'border-emerald-400 bg-emerald-50',
- served: 'border-gray-300 bg-gray-50',
- }[s] || 'border-gray-300 bg-white';
- }
+function getStatusColor(s) {
+  return {
+    pending: 'border-amber-400 bg-amber-50',
+    preparing: 'border-blue-400 bg-blue-50',
+    ready: 'border-emerald-400 bg-emerald-50',
+    served: 'border-gray-300 bg-gray-50',
+    paid: 'border-purple-400 bg-purple-50',
+  }[s] || 'border-gray-300 bg-white';
+}
 
  function renderOrders() {
  const all = getOrders().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));

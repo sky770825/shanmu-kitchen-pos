@@ -33,6 +33,7 @@
  <button data-filter="preparing" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300"> 製作中</button>
  <button data-filter="ready" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300"> 出餐</button>
       <button data-filter="served" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">已送出</button>
+      <button data-filter="paid" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300">已結帳</button>
  </div>
  </header>
 
@@ -85,23 +86,26 @@
  return `${m}分${s}秒`;
  }
 
- function renderOrders() {
- const orders = getOrders().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
- const filtered = (() => {
-        if (currentFilter === 'all') {
-          // 預設隱藏已出餐 (ready) 跟已送出 (served), 不影響新訂單提交顯示
-          return orders.filter(o => o.status !== 'ready' && o.status !== 'served');
-        } else if (currentFilter === 'served') {
-          return orders.filter(o => o.status === 'ready' || o.status === 'served');
-        }
-        return orders.filter(o => o.status === currentFilter);
-      })();
+function renderOrders() {
+  const orders = getOrders().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const filtered = (() => {
+     if (currentFilter === 'all') {
+       // 預設隱藏已出餐 (ready)、已送出 (served)、已結帳 (paid), 只看進行中
+       return orders.filter(o => o.status !== 'ready' && o.status !== 'served' && o.status !== 'paid');
+     } else if (currentFilter === 'served') {
+       return orders.filter(o => o.status === 'ready' || o.status === 'served');
+     } else if (currentFilter === 'paid') {
+       return orders.filter(o => o.status === 'paid');
+     }
+     return orders.filter(o => o.status === currentFilter);
+   })();
 
  // 統計
  const pending = orders.filter(o => o.status === 'pending').length;
  const preparing = orders.filter(o => o.status === 'preparing').length;
  const ready = orders.filter(o => o.status === 'ready').length;
- document.getElementById('stats').textContent = `待處理 ${pending} · 製作中 ${preparing} · 出餐 ${ready} · 全部 ${orders.length}`;
+ const paid = orders.filter(o => o.status === 'paid').length;
+ document.getElementById('stats').textContent = `待處理 ${pending} · 製作中 ${preparing} · 出餐 ${ready} · 已結帳 ${paid} · 全部 ${orders.length}`;
 
  // 檢查新訂單 (音效)
  const newPending = orders.filter(o => o.status === 'pending').length;
@@ -154,22 +158,37 @@
  ${o.items.map(i => `<li class="flex justify-between"><span>${i.name} × ${i.qty}</span><span class="text-slate-400">${formatPrice(i.price * i.qty)}</span></li>`).join('')}
  </ul>
  ${o.note ? `<p class="text-xs text-amber-300 mb-3 whitespace-pre-wrap">備註: ${o.note}</p>` : ''}
- <div class="flex gap-2">
- ${o.status === 'pending' ? `<button onclick="setStatus('${o.id}', 'preparing')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700">開始製作</button>` : ''}
- ${o.status === 'preparing' ? `<button onclick="setStatus('${o.id}', 'ready')" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">出餐</button>` : ''}
- ${o.status === 'ready' ? `<button onclick="setStatus('${o.id}', 'served')" class="flex-1 bg-slate-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-500">已送出</button>` : ''}
- ${o.status === 'served' ? `<button onclick="setStatus('${o.id}', 'pending')" class="flex-1 bg-amber-600/30 text-amber-300 py-2 rounded-lg text-sm font-medium hover:bg-amber-600/50">重新開單</button>` : ''}
- <button onclick="del('${o.id}')" class="px-3 bg-red-600/30 text-red-300 rounded-lg text-sm hover:bg-red-600/50">刪除</button>
- </div>
+  <div class="flex gap-2">
+   ${o.status === 'pending' ? `<button onclick="setStatus('${o.id}', 'preparing')" class="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700">開始製作</button>` : ''}
+   ${o.status === 'preparing' ? `<button onclick="setStatus('${o.id}', 'ready')" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">出餐</button>` : ''}
+   ${o.status === 'ready' ? `<button onclick="setStatus('${o.id}', 'served')" class="flex-1 bg-slate-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-500">已送出</button>` : ''}
+   ${o.status === 'served' ? `<button onclick="checkout('${o.id}')" class="flex-1 bg-amber-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-amber-700">結帳離開</button><button onclick="setStatus('${o.id}', 'pending')" class="px-3 bg-amber-600/30 text-amber-300 rounded-lg text-sm hover:bg-amber-600/50">重開</button>` : ''}
+   ${o.status === 'paid' ? `<span class="flex-1 text-center text-slate-500 text-sm py-2">已結帳 · ${getElapsed(o.paid_at || o.updated_at || o.created_at)}前</span>` : ''}
+   <button onclick="del('${o.id}')" class="px-3 bg-red-600/30 text-red-300 rounded-lg text-sm hover:bg-red-600/50">刪除</button>
+  </div>
  </div>
  `).join('');
  }
 
- function setStatus(id, status) {
- updateOrderStatus(id, status);
- showToast(`訂單已更新為 ${status}`, 'success');
- renderOrders();
- }
+function setStatus(id, status) {
+  updateOrderStatus(id, status);
+  showToast(`訂單已更新為 ${status}`, 'success');
+  renderOrders();
+}
+
+function checkout(id) {
+  showConfirm('結帳確認', '客人已結帳並離開？此操作會清空桌位狀態。', () => {
+    const orders = getOrders();
+    const order = orders.find(o => o.id === id);
+    if (order) {
+      order.status = 'paid';
+      order.paid_at = new Date().toISOString();
+      saveOrders(orders);
+    }
+    showToast(`桌 ${order?.table} 已結帳，桌位已清空`, 'success');
+    renderOrders();
+  });
+}
 
  function del(id) {
  showConfirm('刪除訂單', '確定要刪除這筆訂單嗎？', () => {

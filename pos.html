@@ -134,12 +134,17 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple C
  let cart = {};
  let currentCat = 'all';
 
- function getTableStatus(tableNum) {
- const orders = getOrders().filter(o => o.table === tableNum);
- if (orders.length === 0) return 'empty';
- const active = orders.find(o => o.status === 'pending' || o.status === 'preparing' || o.status === 'ready');
- return active ? (active.status === 'pending' ? 'pending' : 'preparing') : 'done';
- }
+function getTableStatus(tableNum) {
+  const orders = getOrders().filter(o => o.table === tableNum);
+  if (orders.length === 0) return 'empty';
+  // 只看未結帳的 active 訂單 (pending/preparing/ready), served/paid 視為空桌
+  const active = orders.find(o => o.status === 'pending' || o.status === 'preparing' || o.status === 'ready');
+  if (active) {
+    return active.status === 'pending' ? 'pending' : 'preparing';
+  }
+  // 全部訂單都已結帳或送出, 視為空桌
+  return 'empty';
+}
 
  function renderTables() {
  const grid = document.getElementById('tables-grid');
