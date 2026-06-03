@@ -99,10 +99,20 @@
  </div>
  </div>
 
- <script src="common.js"></script>
- <script>
- const PASSWORD = '8532';
- let editingId = null;
+<script src="common.js"></script>
+<script>
+const PASSWORD='8532';
+let editingId = null;
+
+// 自動登入 (支援 ?pwd=XXXX query string, 方便 E2E 測試)
+(function autoLogin() {
+  const params = new URLSearchParams(window.location.search);
+  const autoPwd = params.get('pwd') || params.get('auto_pwd');
+  if (autoPwd) {
+    document.getElementById('pwd').value = autoPwd;
+    login();
+  }
+})();
 
  function login() {
  const pwd = document.getElementById('pwd').value;
@@ -142,8 +152,8 @@
  <p class="font-bold truncate">${d.name} ${d.available === false ? '<span class="text-xs text-red-500">(下架)</span>' : ''}</p>
  <p class="text-xs text-gray-500">${d.category} · ${formatPrice(d.price)}</p>
  </div>
- <button onclick="editDish('${d.id}')" class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-sm">️</button>
- <button onclick="delDish('${d.id}')" class="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-sm"></button>
+    <button onclick="editDish('${d.id}')" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded text-sm font-medium min-w-[44px] min-h-[44px]">編輯</button>
+    <button onclick="delDish('${d.id}')" class="text-red-600 hover:bg-red-50 px-3 py-2 rounded text-sm font-medium min-w-[44px] min-h-[44px]">刪除</button>
  </div>
  `).join('');
  }

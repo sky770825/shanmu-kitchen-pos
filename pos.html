@@ -137,12 +137,19 @@ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple C
 function getTableStatus(tableNum) {
   const orders = getOrders().filter(o => o.table === tableNum);
   if (orders.length === 0) return 'empty';
-  // 只看未結帳的 active 訂單 (pending/preparing/ready), served/paid 視為空桌
-  const active = orders.find(o => o.status === 'pending' || o.status === 'preparing' || o.status === 'ready');
-  if (active) {
-    return active.status === 'pending' ? 'pending' : 'preparing';
-  }
-  // 全部訂單都已結帳或送出, 視為空桌
+  // 桌號狀態 vs 訂單狀態對應:
+  // - pending 訂單 (待送廚房) → 桌號顯示「待送」
+  // - preparing 訂單 (廚房製作中) → 桌號顯示「廚房中」
+  // - ready 訂單 (出餐待送) → 桌號顯示「用餐中」(出餐了, 客人開始吃)
+  // - served 訂單 (已送達) → 桌號顯示「用餐中」(客人正在吃)
+  // - paid 訂單 (結帳離開) → 桌號顯示「空桌」
+  const pending = orders.find(o => o.status === 'pending');
+  if (pending) return 'pending';
+  const preparing = orders.find(o => o.status === 'preparing');
+  if (preparing) return 'preparing';
+  const eating = orders.find(o => o.status === 'ready' || o.status === 'served');
+  if (eating) return 'eating';
+  // 全部 paid → 空桌
   return 'empty';
 }
 
@@ -151,15 +158,16 @@ function getTableStatus(tableNum) {
  grid.innerHTML = '';
  for (let i = 1; i <= TOTAL_TABLES; i++) {
  const status = getTableStatus(i);
- const colors = {
- empty: 'bg-emerald-100 text-emerald-700 border-emerald-300',
- pending: 'bg-amber-100 text-amber-800 border-amber-300',
- preparing: 'bg-blue-100 text-blue-800 border-blue-300',
- done: 'bg-gray-100 text-gray-500 border-gray-300',
- };
- const btn = document.createElement('button');
- btn.className = `table-btn p-3 rounded-lg border-2 font-bold text-sm ${colors[status]} ${selectedTable === i ? 'active' : ''} ${status !== 'empty' ? 'has-order' : ''}`;
- btn.innerHTML = `${i}<br><span class="text-[10px] font-normal">${status === 'empty' ? '空' : status === 'pending' ? '待送' : status === 'preparing' ? '廚房' : '完成'}</span>`;
+    const colors = {
+      empty: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+      pending: 'bg-amber-100 text-amber-800 border-amber-300',
+      preparing: 'bg-blue-100 text-blue-800 border-blue-300',
+      eating: 'bg-orange-100 text-orange-800 border-orange-300',
+      done: 'bg-gray-100 text-gray-500 border-gray-300',
+    };
+    const btn = document.createElement('button');
+    btn.className = `table-btn p-3 rounded-lg border-2 font-bold text-sm ${colors[status]} ${selectedTable === i ? 'active' : ''} ${status !== 'empty' ? 'has-order' : ''}`;
+    btn.innerHTML = `${i}<br><span class="text-[10px] font-normal">${status === 'empty' ? '空' : status === 'pending' ? '待送' : status === 'preparing' ? '廚房' : status === 'eating' ? '用餐' : '完成'}</span>`;
  btn.onclick = () => selectTable(i);
  grid.appendChild(btn);
  }
