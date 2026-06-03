@@ -1,320 +1,318 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>線上點餐 — 山木小館</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
-    .emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Twemoji Mozilla", sans-serif; }
-    .qty-btn { @apply w-8 h-8 rounded-full font-bold text-lg transition; }
-  </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>線上點餐 — 山木小館</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <style>
+ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+ .emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Twemoji Mozilla", sans-serif; }
+ .qty-btn { @apply w-8 h-8 rounded-full font-bold text-lg transition; }
+ </style>
 </head>
 <body class="bg-emerald-50 min-h-screen pb-24">
-  <!-- Header -->
-  <header class="bg-emerald-600 text-white sticky top-0 z-40 shadow-lg">
-    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <img src="https://files.catbox.moe/dm5547.png" alt="山木小館" class="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-white/30">
-        <div>
-          <h1 class="text-xl font-bold">🍃 山木小館</h1>
-          <p class="text-sm opacity-90" id="table-info">線上點餐</p>
-        </div>
-      </div>
-      <a href="index.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">
-        ← 回首頁
-      </a>
-    </div>
-  </header>
+ <!-- Header -->
+ <header class="bg-emerald-600 text-white sticky top-0 z-40 shadow-lg">
+ <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+ <div class="flex items-center gap-3">
+ <img src="https://files.catbox.moe/dm5547.png" alt="山木小館" class="w-10 h-10 rounded-full object-cover shadow-md ring-2 ring-white/30">
+ <div>
+ <h1 class="text-xl font-bold"> 山木小館</h1>
+ <p class="text-sm opacity-90" id="table-info">線上點餐</p>
+ </div>
+ </div>
+ <a href="index.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">
+ ← 回首頁
+ </a>
+ </div>
+ </header>
 
-  <!-- Cart indicator (sticky bottom on mobile) -->
-  <div class="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-    <button onclick="showCart()" class="w-full bg-emerald-700 text-white py-4 font-bold shadow-2xl flex items-center justify-center gap-2">
-      🛒 購物車 (<span id="cart-count-mobile">0</span>) · <span id="cart-total-mobile">$0</span>
-    </button>
-  </div>
+ <!-- Cart indicator (sticky bottom on mobile) -->
+ <div class="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+ <button onclick="showCart()" class="w-full bg-emerald-700 text-white py-4 font-bold shadow-2xl flex items-center justify-center gap-2">
+ 購物車 (<span id="cart-count-mobile">0</span>) · <span id="cart-total-mobile">$0</span>
+ </button>
+ </div>
 
-  <!-- Main -->
-  <main class="max-w-4xl mx-auto px-4 py-6">
-    <!-- Category filter -->
-    <div id="category-filter" class="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
-      <button data-cat="all" class="cat-btn px-4 py-2 rounded-full bg-emerald-600 text-white text-sm font-medium whitespace-nowrap">全部</button>
-    </div>
+ <!-- Main -->
+ <main class="max-w-4xl mx-auto px-4 py-6">
+ <!-- Category filter -->
+ <div id="category-filter" class="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
+ <button data-cat="all" class="cat-btn px-4 py-2 rounded-full bg-emerald-600 text-white text-sm font-medium whitespace-nowrap">全部</button>
+ </div>
 
-    <!-- Dishes grid -->
-    <div id="dishes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <!-- 由 JS 渲染 -->
-    </div>
-  </main>
+ <!-- Dishes grid -->
+ <div id="dishes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+ <!-- 由 JS 渲染 -->
+ </div>
+ </main>
 
-  <!-- Cart Modal -->
-  <div id="cart-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center">
-    <div class="bg-white w-full max-w-lg md:rounded-2xl rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold text-emerald-800">🛒 購物車</h2>
-        <button onclick="hideCart()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
-      </div>
-      <div id="cart-items" class="space-y-3 mb-4">
-        <!-- 由 JS 渲染 -->
-      </div>
-      <div id="cart-empty" class="text-center text-gray-400 py-8">購物車是空的</div>
-      <div id="cart-summary" class="border-t pt-4 hidden">
-        <div class="flex justify-between items-center mb-4">
-          <span class="text-gray-600">總計</span>
-          <span class="text-2xl font-black text-emerald-700" id="cart-total">$0</span>
-        </div>
-        <input id="note-input" type="text" placeholder="備註（辣度/不吃牛等）" class="w-full border rounded-lg px-3 py-2 mb-3 text-sm">
-        <button onclick="submitOrder()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-emerald-700 transition">
-          ✅ 確認送出
-        </button>
-      </div>
-    </div>
-  </div>
+ <!-- Cart Modal -->
+ <div id="cart-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end md:items-center justify-center">
+ <div class="bg-white w-full max-w-lg md:rounded-2xl rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
+ <div class="flex items-center justify-between mb-4">
+ <h2 class="text-2xl font-bold text-emerald-800"> 購物車</h2>
+ <button onclick="hideCart()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+ </div>
+ <div id="cart-items" class="space-y-3 mb-4">
+ <!-- 由 JS 渲染 -->
+ </div>
+ <div id="cart-empty" class="text-center text-gray-400 py-8">購物車是空的</div>
+ <div id="cart-summary" class="border-t pt-4 hidden">
+ <div class="flex justify-between items-center mb-4">
+ <span class="text-gray-600">總計</span>
+ <span class="text-2xl font-black text-emerald-700" id="cart-total">$0</span>
+ </div>
+ <input id="note-input" type="text" placeholder="備註（辣度/不吃牛等）" class="w-full border rounded-lg px-3 py-2 mb-3 text-sm">
+ <button onclick="submitOrder()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-emerald-700 transition">
+ 確認送出
+ </button>
+ </div>
+ </div>
+ </div>
 
-  <!-- Dish Detail Modal (B2: 縮圖點擊放大) -->
-  <div id="dish-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onclick="if(event.target.id==='dish-modal') hideDishDetail()">
-    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl">
-      <div id="dish-modal-img" class="aspect-square bg-emerald-100">
-        <!-- 大圖 -->
-      </div>
-      <div class="p-6">
-        <h2 id="dish-modal-name" class="text-2xl font-black text-gray-800 mb-2"></h2>
-        <p id="dish-modal-desc" class="text-sm text-gray-600 mb-4"></p>
-        <div class="flex items-center justify-between mb-4">
-          <span id="dish-modal-price" class="text-3xl font-black text-emerald-700"></span>
-          <span id="dish-modal-cat" class="text-xs px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium"></span>
-        </div>
-        <div class="flex items-center gap-3">
-          <button onclick="dishModalDec()" class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xl hover:bg-emerald-200">−</button>
-          <span id="dish-modal-qty" class="flex-1 text-center text-2xl font-black">0</span>
-          <button onclick="dishModalInc()" class="w-10 h-10 rounded-full bg-emerald-600 text-white font-bold text-xl hover:bg-emerald-700">+</button>
-        </div>
-        <div class="flex gap-2 mt-4">
-          <button onclick="hideDishDetail()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200">關閉</button>
-          <button onclick="addDishToCartFromModal()" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">加入購物車</button>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- Dish Detail Modal (B2: 縮圖點擊放大) -->
+ <div id="dish-modal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onclick="if(event.target.id==='dish-modal') hideDishDetail()">
+ <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl">
+ <div id="dish-modal-img" class="aspect-square bg-emerald-100">
+ <!-- 大圖 -->
+ </div>
+ <div class="p-6">
+ <h2 id="dish-modal-name" class="text-2xl font-black text-gray-800 mb-2"></h2>
+ <p id="dish-modal-desc" class="text-sm text-gray-600 mb-4"></p>
+ <div class="flex items-center justify-between mb-4">
+ <span id="dish-modal-price" class="text-3xl font-black text-emerald-700"></span>
+ <span id="dish-modal-cat" class="text-xs px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium"></span>
+ </div>
+ <div class="flex items-center gap-3">
+ <button onclick="dishModalDec()" class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xl hover:bg-emerald-200">−</button>
+ <span id="dish-modal-qty" class="flex-1 text-center text-2xl font-black">0</span>
+ <button onclick="dishModalInc()" class="w-10 h-10 rounded-full bg-emerald-600 text-white font-bold text-xl hover:bg-emerald-700">+</button>
+ </div>
+ <div class="flex gap-2 mt-4">
+ <button onclick="hideDishDetail()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200">關閉</button>
+ <button onclick="addDishToCartFromModal()" class="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">加入購物車</button>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <!-- Success Modal (B1: 結帳跳 KDS) -->
-  <div id="success-modal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+ <!-- Success Modal (B1: 結帳跳 KDS) -->
+ <div <div id="success-modal" class="hidden fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-8 text-center">
-      <div class="text-7xl mb-4">✅</div>
-      <h2 class="text-2xl font-black text-emerald-700 mb-2">訂單已送出！</h2>
-      <p id="success-order-info" class="text-sm text-gray-600 mb-6"></p>
-      <div class="space-y-2">
-        <a href="kds.html" class="block w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">🍳 跳到 KDS 廚房看板</a>
-        <button onclick="closeSuccessModal()" class="block w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">🍽️ 繼續點餐</button>
-      </div>
+      <h2 class="text-2xl font-black text-emerald-700 mb-2">訂單已送出</h2>
+      <p id="success-order-info" class="text-sm text-gray-600 mb-2"></p>
+      <p class="text-sm text-gray-500 mb-6">廚房收到後會盡快為您準備</p>
+      <button onclick="closeSuccessModal()" class="block w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">繼續點餐</button>
     </div>
   </div>
+ </div>
 
-  <script src="common.js"></script>
-  <script>
-    const tableNum = getTableFromURL();
-    if (tableNum > 0) {
-      document.getElementById('table-info').textContent = `桌號 ${tableNum} · 線上點餐`;
-    }
+ <script src="common.js"></script>
+ <script>
+ const tableNum = getTableFromURL();
+ if (tableNum > 0) {
+ document.getElementById('table-info').textContent = `桌號 ${tableNum} · 線上點餐`;
+ }
 
-    let cart = {}; // {dish_id: {dish, qty}}
-    let currentCat = 'all';
+ let cart = {}; // {dish_id: {dish, qty}}
+ let currentCat = 'all';
 
-    function renderCategoryFilter() {
-      const menu = getMenu();
-      const cats = ['all', ...new Set(menu.map(d => d.category))];
-      const container = document.getElementById('category-filter');
-      container.innerHTML = cats.map(cat => `
-        <button data-cat="${cat}" class="cat-btn px-4 py-2 rounded-full ${currentCat === cat ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'} text-sm font-medium whitespace-nowrap hover:bg-emerald-100">
-          ${cat === 'all' ? '全部' : cat}
-        </button>
-      `).join('');
-      container.querySelectorAll('.cat-btn').forEach(btn => {
-        btn.onclick = () => {
-          currentCat = btn.dataset.cat;
-          renderCategoryFilter();
-          renderDishes();
-        };
-      });
-    }
+ function renderCategoryFilter() {
+ const menu = getMenu();
+ const cats = ['all', ...new Set(menu.map(d => d.category))];
+ const container = document.getElementById('category-filter');
+ container.innerHTML = cats.map(cat => `
+ <button data-cat="${cat}" class="cat-btn px-4 py-2 rounded-full ${currentCat === cat ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'} text-sm font-medium whitespace-nowrap hover:bg-emerald-100">
+ ${cat === 'all' ? '全部' : cat}
+ </button>
+ `).join('');
+ container.querySelectorAll('.cat-btn').forEach(btn => {
+ btn.onclick = () => {
+ currentCat = btn.dataset.cat;
+ renderCategoryFilter();
+ renderDishes();
+ };
+ });
+ }
 
-    function renderDishes() {
-      const menu = getMenu().filter(d => d.available !== false);
-      const filtered = currentCat === 'all' ? menu : menu.filter(d => d.category === currentCat);
-      const grid = document.getElementById('dishes-grid');
-      grid.innerHTML = filtered.map(dish => {
-        const inCart = cart[dish.id]?.qty || 0;
-        return `
-          <div class="bg-white rounded-2xl p-4 shadow-sm flex gap-3 items-center">
-            <div onclick="showDishDetail('${dish.id}', 'order')"
-                 class="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 cursor-pointer hover:scale-110 transition-transform">
-              ${dish.image
-              ? (dish.image.startsWith('http')
-                  ? `<img src="${dish.image}" class="w-full h-full object-cover rounded-xl">`
-                  : `<div class="w-full h-full flex items-center justify-center text-2xl">${dish.image}</div>`)
-              : `<div class="w-full h-full flex items-center justify-center text-2xl">🍽️</div>`}
-            </div>
-            <div class="flex-1 min-w-0 cursor-pointer" onclick="showDishDetail('${dish.id}', 'order')">
-              <h3 class="font-bold text-gray-800 truncate">${dish.name}</h3>
-              <p class="text-xs text-gray-500 truncate">${dish.description || dish.category}</p>
-              <p class="text-emerald-700 font-bold">${formatPrice(dish.price)}</p>
-            </div>
-            <div class="flex items-center gap-2">
-              ${inCart > 0 ? `
-                <button onclick="updateCart('${dish.id}', -1)" class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold hover:bg-emerald-200">−</button>
-                <span class="w-6 text-center font-bold">${inCart}</span>
-              ` : ''}
-              <button onclick="updateCart('${dish.id}', 1)" class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold hover:bg-emerald-700">+</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
+ function renderDishes() {
+ const menu = getMenu().filter(d => d.available !== false);
+ const filtered = currentCat === 'all' ? menu : menu.filter(d => d.category === currentCat);
+ const grid = document.getElementById('dishes-grid');
+ grid.innerHTML = filtered.map(dish => {
+ const inCart = cart[dish.id]?.qty || 0;
+ return `
+ <div class="bg-white rounded-2xl p-4 shadow-sm flex gap-3 items-center">
+ <div onclick="showDishDetail('${dish.id}', 'order')"
+ class="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 cursor-pointer hover:scale-110 transition-transform">
+ ${dish.image
+ ? (dish.image.startsWith('http')
+ ? `<img src="${dish.image}" class="w-full h-full object-cover rounded-xl">`
+ : `<div class="w-full h-full flex items-center justify-center text-2xl">${dish.image}</div>`)
+ : `<div class="w-full h-full flex items-center justify-center text-2xl">️</div>`}
+ </div>
+ <div class="flex-1 min-w-0 cursor-pointer" onclick="showDishDetail('${dish.id}', 'order')">
+ <h3 class="font-bold text-gray-800 truncate">${dish.name}</h3>
+ <p class="text-xs text-gray-500 truncate">${dish.description || dish.category}</p>
+ <p class="text-emerald-700 font-bold">${formatPrice(dish.price)}</p>
+ </div>
+ <div class="flex items-center gap-2">
+ ${inCart > 0 ? `
+ <button onclick="updateCart('${dish.id}', -1)" class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold hover:bg-emerald-200">−</button>
+ <span class="w-6 text-center font-bold">${inCart}</span>
+ ` : ''}
+ <button onclick="updateCart('${dish.id}', 1)" class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold hover:bg-emerald-700">+</button>
+ </div>
+ </div>
+ `;
+ }).join('');
+ }
 
-    function updateCart(dishId, delta) {
-      const menu = getMenu();
-      const dish = menu.find(d => d.id === dishId);
-      if (!dish) return;
-      if (!cart[dishId]) cart[dishId] = { dish, qty: 0 };
-      cart[dishId].qty = Math.max(0, cart[dishId].qty + delta);
-      if (cart[dishId].qty === 0) delete cart[dishId];
-      renderDishes();
-      updateCartBadge();
-    }
+ function updateCart(dishId, delta) {
+ const menu = getMenu();
+ const dish = menu.find(d => d.id === dishId);
+ if (!dish) return;
+ if (!cart[dishId]) cart[dishId] = { dish, qty: 0 };
+ cart[dishId].qty = Math.max(0, cart[dishId].qty + delta);
+ if (cart[dishId].qty === 0) delete cart[dishId];
+ renderDishes();
+ updateCartBadge();
+ }
 
-    function updateCartBadge() {
-      const total = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
-      const amount = Object.values(cart).reduce((sum, item) => sum + item.qty * item.dish.price, 0);
-      document.getElementById('cart-count-mobile').textContent = total;
-      document.getElementById('cart-total-mobile').textContent = formatPrice(amount);
-    }
+ function updateCartBadge() {
+ const total = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
+ const amount = Object.values(cart).reduce((sum, item) => sum + item.qty * item.dish.price, 0);
+ document.getElementById('cart-count-mobile').textContent = total;
+ document.getElementById('cart-total-mobile').textContent = formatPrice(amount);
+ }
 
-    function showCart() {
-      document.getElementById('cart-modal').classList.remove('hidden');
-      renderCart();
-    }
+ function showCart() {
+ document.getElementById('cart-modal').classList.remove('hidden');
+ renderCart();
+ }
 
-    function hideCart() {
-      document.getElementById('cart-modal').classList.add('hidden');
-    }
+ function hideCart() {
+ document.getElementById('cart-modal').classList.add('hidden');
+ }
 
-    function renderCart() {
-      const items = Object.values(cart);
-      const list = document.getElementById('cart-items');
-      const empty = document.getElementById('cart-empty');
-      const summary = document.getElementById('cart-summary');
-      if (items.length === 0) {
-        list.innerHTML = '';
-        empty.classList.remove('hidden');
-        summary.classList.add('hidden');
-        return;
-      }
-      empty.classList.add('hidden');
-      summary.classList.remove('hidden');
-      list.innerHTML = items.map(item => `
-        <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-          <div class="flex-1">
-            <p class="font-medium">${item.dish.name}</p>
-            <p class="text-sm text-gray-500">${formatPrice(item.dish.price)} × ${item.qty}</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="updateCart('${item.dish.id}', -1)" class="w-7 h-7 rounded-full bg-white text-emerald-700 font-bold">−</button>
-            <span class="w-6 text-center font-bold">${item.qty}</span>
-            <button onclick="updateCart('${item.dish.id}', 1)" class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold">+</button>
-          </div>
-          <p class="font-bold w-16 text-right">${formatPrice(item.dish.price * item.qty)}</p>
-        </div>
-      `).join('');
-      const total = items.reduce((sum, item) => sum + item.qty * item.dish.price, 0);
-      document.getElementById('cart-total').textContent = formatPrice(total);
-    }
+ function renderCart() {
+ const items = Object.values(cart);
+ const list = document.getElementById('cart-items');
+ const empty = document.getElementById('cart-empty');
+ const summary = document.getElementById('cart-summary');
+ if (items.length === 0) {
+ list.innerHTML = '';
+ empty.classList.remove('hidden');
+ summary.classList.add('hidden');
+ return;
+ }
+ empty.classList.add('hidden');
+ summary.classList.remove('hidden');
+ list.innerHTML = items.map(item => `
+ <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+ <div class="flex-1">
+ <p class="font-medium">${item.dish.name}</p>
+ <p class="text-sm text-gray-500">${formatPrice(item.dish.price)} × ${item.qty}</p>
+ </div>
+ <div class="flex items-center gap-2">
+ <button onclick="updateCart('${item.dish.id}', -1)" class="w-7 h-7 rounded-full bg-white text-emerald-700 font-bold">−</button>
+ <span class="w-6 text-center font-bold">${item.qty}</span>
+ <button onclick="updateCart('${item.dish.id}', 1)" class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold">+</button>
+ </div>
+ <p class="font-bold w-16 text-right">${formatPrice(item.dish.price * item.qty)}</p>
+ </div>
+ `).join('');
+ const total = items.reduce((sum, item) => sum + item.qty * item.dish.price, 0);
+ document.getElementById('cart-total').textContent = formatPrice(total);
+ }
 
-    function submitOrder() {
-      const items = Object.values(cart).map(c => ({
-        dish_id: c.dish.id,
-        qty: c.qty,
-        name: c.dish.name,
-        price: c.dish.price,
-      }));
-      if (items.length === 0) {
-        showToast('購物車是空的', 'warning');
-        return;
-      }
-      const note = document.getElementById('note-input').value;
-      const table = tableNum || 0;
-      const order = createOrder(table, items, note);
-      // B1: 顯示成功 modal, 詢問跳 KDS
-      document.getElementById('success-order-info').textContent =
-        `桌號 ${table || '未指定'} · ${items.length} 項 · ${formatPrice(order.total)}`;
-      document.getElementById('success-modal').classList.remove('hidden');
-      cart = {};
-      updateCartBadge();
-      hideCart();
-    }
+ function submitOrder() {
+ const items = Object.values(cart).map(c => ({
+ dish_id: c.dish.id,
+ qty: c.qty,
+ name: c.dish.name,
+ price: c.dish.price,
+ }));
+ if (items.length === 0) {
+ showToast('購物車是空的', 'warning');
+ return;
+ }
+ const note = document.getElementById('note-input').value;
+ const table = tableNum || 0;
+ const order = createOrder(table, items, note);
+ // B1: 顯示成功 modal, 詢問跳 KDS
+ document.getElementById('success-order-info').textContent =
+ `桌號 ${table || '未指定'} · ${items.length} 項 · ${formatPrice(order.total)}`;
+ document.getElementById('success-modal').classList.remove('hidden');
+ cart = {};
+ updateCartBadge();
+ hideCart();
+ }
 
-    function closeSuccessModal() {
-      document.getElementById('success-modal').classList.add('hidden');
-      renderDishes();
-    }
+ function closeSuccessModal() {
+ document.getElementById('success-modal').classList.add('hidden');
+ renderDishes();
+ }
 
-    // ===== B2: Dish Detail Modal =====
-    let currentDishId = null;
-    let currentDishQty = 0;
+ // ===== B2: Dish Detail Modal =====
+ let currentDishId = null;
+ let currentDishQty = 0;
 
-    function showDishDetail(dishId) {
-      const menu = getMenu();
-      const dish = menu.find(d => d.id === dishId);
-      if (!dish) return;
-      currentDishId = dishId;
-      currentDishQty = cart[dishId]?.qty || 0;
-      // 大圖
-      const imgContainer = document.getElementById('dish-modal-img');
-      if (dish.image && dish.image.startsWith('http')) {
-        imgContainer.innerHTML = `<img src="${dish.image}" class="w-full h-full object-cover">`;
-      } else if (dish.image) {
-        imgContainer.innerHTML = `<div class="w-full h-full flex items-center justify-center text-9xl">${dish.image}</div>`;
-      } else {
-        imgContainer.innerHTML = `<div class="w-full h-full flex items-center justify-center text-9xl">🍽️</div>`;
-      }
-      document.getElementById('dish-modal-name').textContent = dish.name;
-      document.getElementById('dish-modal-desc').textContent = dish.description || '招牌好菜, 不容錯過';
-      document.getElementById('dish-modal-price').textContent = formatPrice(dish.price);
-      document.getElementById('dish-modal-cat').textContent = dish.category;
-      document.getElementById('dish-modal-qty').textContent = currentDishQty;
-      document.getElementById('dish-modal').classList.remove('hidden');
-    }
+ function showDishDetail(dishId) {
+ const menu = getMenu();
+ const dish = menu.find(d => d.id === dishId);
+ if (!dish) return;
+ currentDishId = dishId;
+ currentDishQty = cart[dishId]?.qty || 0;
+ // 大圖
+ const imgContainer = document.getElementById('dish-modal-img');
+ if (dish.image && dish.image.startsWith('http')) {
+ imgContainer.innerHTML = `<img src="${dish.image}" class="w-full h-full object-cover">`;
+ } else if (dish.image) {
+ imgContainer.innerHTML = `<div class="w-full h-full flex items-center justify-center text-9xl">${dish.image}</div>`;
+ } else {
+ imgContainer.innerHTML = `<div class="w-full h-full flex items-center justify-center text-9xl">️</div>`;
+ }
+ document.getElementById('dish-modal-name').textContent = dish.name;
+ document.getElementById('dish-modal-desc').textContent = dish.description || '招牌好菜, 不容錯過';
+ document.getElementById('dish-modal-price').textContent = formatPrice(dish.price);
+ document.getElementById('dish-modal-cat').textContent = dish.category;
+ document.getElementById('dish-modal-qty').textContent = currentDishQty;
+ document.getElementById('dish-modal').classList.remove('hidden');
+ }
 
-    function hideDishDetail() {
-      document.getElementById('dish-modal').classList.add('hidden');
-    }
+ function hideDishDetail() {
+ document.getElementById('dish-modal').classList.add('hidden');
+ }
 
-    function dishModalInc() {
-      currentDishQty++;
-      document.getElementById('dish-modal-qty').textContent = currentDishQty;
-    }
+ function dishModalInc() {
+ currentDishQty++;
+ document.getElementById('dish-modal-qty').textContent = currentDishQty;
+ }
 
-    function dishModalDec() {
-      if (currentDishQty > 0) currentDishQty--;
-      document.getElementById('dish-modal-qty').textContent = currentDishQty;
-    }
+ function dishModalDec() {
+ if (currentDishQty > 0) currentDishQty--;
+ document.getElementById('dish-modal-qty').textContent = currentDishQty;
+ }
 
-    function addDishToCartFromModal() {
-      if (!currentDishId) return;
-      const currentInCart = cart[currentDishId]?.qty || 0;
-      const delta = currentDishQty - currentInCart;
-      if (delta > 0) {
-        for (let i = 0; i < delta; i++) updateCart(currentDishId, 1);
-      } else if (delta < 0) {
-        for (let i = 0; i < -delta; i++) updateCart(currentDishId, -1);
-      }
-      showToast(`已更新購物車 (${currentDishQty} 份)`, 'success');
-      hideDishDetail();
-    }
+ function addDishToCartFromModal() {
+ if (!currentDishId) return;
+ const currentInCart = cart[currentDishId]?.qty || 0;
+ const delta = currentDishQty - currentInCart;
+ if (delta > 0) {
+ for (let i = 0; i < delta; i++) updateCart(currentDishId, 1);
+ } else if (delta < 0) {
+ for (let i = 0; i < -delta; i++) updateCart(currentDishId, -1);
+ }
+ showToast(`已更新購物車 (${currentDishQty} 份)`, 'success');
+ hideDishDetail();
+ }
 
-    // Init
-    renderCategoryFilter();
-    renderDishes();
-  </script>
+ // Init
+ renderCategoryFilter();
+ renderDishes();
+ </script>
 </body>
 </html>

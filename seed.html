@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><title>Seed Test Orders</title></head>
+<body>
+<script>
+const testOrders = [
+  {id:'order_demo1', table:3, items:[{dish_id:'d001', name:'翡翠綠炒飯', price:180, qty:2},{dish_id:'d007', name:'酸辣湯', price:80, qty:1}], total:440, status:'pending', created_at:new Date(Date.now()-2*60000).toISOString(), note:'不要蔥'},
+  {id:'order_demo2', table:7, items:[{dish_id:'d002', name:'山木小館紅燒肉', price:280, qty:1},{dish_id:'d008', name:'竹筍雞湯', price:220, qty:1},{dish_id:'d011', name:'白飯', price:20, qty:2}], total:540, status:'preparing', created_at:new Date(Date.now()-8*60000).toISOString(), note:'飯少一點'},
+  {id:'order_demo3', table:12, items:[{dish_id:'d013', name:'紫米紅豆湯', price:60, qty:3},{dish_id:'d015', name:'古早味紅茶', price:40, qty:2}], total:260, status:'ready', created_at:new Date(Date.now()-15*60000).toISOString(), note:''},
+  {id:'order_demo4', table:5, items:[{dish_id:'d003', name:'客家小炒', price:220, qty:1},{dish_id:'d009', name:'清炒高麗菜', price:100, qty:1}], total:320, status:'served', created_at:new Date(Date.now()-45*60000).toISOString(), note:'辣一點'},
+];
+localStorage.setItem('pos_orders', JSON.stringify(testOrders));
+localStorage.setItem('pos_init_v1', '1');
+// 自動跳 KDS
+setTimeout(() => location.href = 'kds.html', 100);
+</script>
+<p>已注入 4 個測試訂單，跳轉 KDS...</p>
+</body>
+</html>

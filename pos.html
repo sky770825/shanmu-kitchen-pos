@@ -1,244 +1,244 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>POS 點餐系統 — 山木小館</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
-    .emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Twemoji Mozilla", sans-serif; }
-    .table-btn { transition: all 0.15s; }
-    .table-btn.active { background: #047857; color: white; }
-    .table-btn.has-order { box-shadow: 0 0 0 3px #fbbf24; }
-  </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>POS 點餐系統 — 山木小館</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <style>
+ body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+ .emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color", "Twemoji Mozilla", sans-serif; }
+ .table-btn { transition: all 0.15s; }
+ .table-btn.active { background: #047857; color: white; }
+ .table-btn.has-order { box-shadow: 0 0 0 3px #fbbf24; }
+ </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-  <!-- Header -->
-  <header class="bg-emerald-700 text-white shadow-lg">
-    <div class="px-4 py-3 flex items-center justify-between">
-      <div>
-        <h1 class="text-lg font-bold">🧾 POS 點餐</h1>
-        <p class="text-xs opacity-80" id="header-info">點擊桌位開始點餐</p>
-      </div>
-      <div class="flex gap-2">
-        <a href="kds.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">🍳 廚房</a>
-        <a href="admin.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">⚙️</a>
-      </div>
-    </div>
-  </header>
+ <!-- Header -->
+ <header class="bg-emerald-700 text-white shadow-lg">
+ <div class="px-4 py-3 flex items-center justify-between">
+ <div>
+ <h1 class="text-lg font-bold"> POS 點餐</h1>
+ <p class="text-xs opacity-80" id="header-info">點擊桌位開始點餐</p>
+ </div>
+ <div class="flex gap-2">
+ <a href="kds.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition"> 廚房</a>
+ <a href="admin.html" class="text-sm bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition">️</a>
+ </div>
+ </div>
+ </header>
 
-  <!-- Mobile: Bottom sheet for cart -->
-  <div id="bottom-sheet" class="hidden md:hidden fixed inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-2xl z-40 max-h-[70vh] overflow-y-auto">
-    <div class="p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-bold text-lg" id="sheet-title">桌位 1</h3>
-        <button onclick="closeSheet()" class="text-gray-500 text-2xl">×</button>
-      </div>
-      <div id="cart-content" class="space-y-2 mb-3"></div>
-      <div class="border-t pt-3 flex justify-between items-center">
-        <span>總計</span>
-        <span class="text-2xl font-black text-emerald-700" id="sheet-total">$0</span>
-      </div>
-      <button onclick="submit()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold mt-3">送出訂單</button>
-    </div>
-  </div>
+ <!-- Mobile: Bottom sheet for cart -->
+ <div id="bottom-sheet" class="hidden md:hidden fixed inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-2xl z-40 max-h-[70vh] overflow-y-auto">
+ <div class="p-4">
+ <div class="flex items-center justify-between mb-3">
+ <h3 class="font-bold text-lg" id="sheet-title">桌位 1</h3>
+ <button onclick="closeSheet()" class="text-gray-500 text-2xl">×</button>
+ </div>
+ <div id="cart-content" class="space-y-2 mb-3"></div>
+ <div class="border-t pt-3 flex justify-between items-center">
+ <span>總計</span>
+ <span class="text-2xl font-black text-emerald-700" id="sheet-total">$0</span>
+ </div>
+ <button onclick="submit()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold mt-3">送出訂單</button>
+ </div>
+ </div>
 
-  <!-- Desktop layout -->
-  <div class="flex md:flex-row flex-col h-[calc(100vh-58px)]">
-    <!-- Left: 桌位地圖 -->
-    <aside class="md:w-64 bg-white md:border-r border-b md:border-b-0 overflow-y-auto p-4">
-      <h2 class="font-bold text-gray-700 mb-3 text-sm">🪑 桌位地圖 (15 桌)</h2>
-      <div class="grid grid-cols-3 md:grid-cols-2 gap-2" id="tables-grid">
-        <!-- 由 JS 渲染 -->
-      </div>
-      <div class="mt-4 pt-4 border-t text-xs text-gray-500 space-y-1">
-        <p>🟢 空桌</p>
-        <p>🟡 有訂單 (未送出)</p>
-        <p>✅ 已送出 (廚房處理中)</p>
-      </div>
-    </aside>
+ <!-- Desktop layout -->
+ <div class="flex md:flex-row flex-col h-[calc(100vh-58px)]">
+ <!-- Left: 桌位地圖 -->
+ <aside class="md:w-64 bg-white md:border-r border-b md:border-b-0 overflow-y-auto p-4">
+ <h2 class="font-bold text-gray-700 mb-3 text-sm"> 桌位地圖 (15 桌)</h2>
+ <div class="grid grid-cols-3 md:grid-cols-2 gap-2" id="tables-grid">
+ <!-- 由 JS 渲染 -->
+ </div>
+ <div class="mt-4 pt-4 border-t text-xs text-gray-500 space-y-1">
+ <p> 空桌</p>
+ <p> 有訂單 (未送出)</p>
+ <p> 已送出 (廚房處理中)</p>
+ </div>
+ </aside>
 
-    <!-- Middle: 菜單 -->
-    <main class="flex-1 overflow-y-auto p-4">
-      <div class="flex gap-2 overflow-x-auto pb-3 mb-4" id="cat-filter">
-        <!-- 由 JS 渲染 -->
-      </div>
-      <div class="grid grid-cols-2 lg:grid-cols-3 gap-3" id="dishes-grid">
-        <!-- 由 JS 渲染 -->
-      </div>
-    </main>
+ <!-- Middle: 菜單 -->
+ <main class="flex-1 overflow-y-auto p-4">
+ <div class="flex gap-2 overflow-x-auto pb-3 mb-4" id="cat-filter">
+ <!-- 由 JS 渲染 -->
+ </div>
+ <div class="grid grid-cols-2 lg:grid-cols-3 gap-3" id="dishes-grid">
+ <!-- 由 JS 渲染 -->
+ </div>
+ </main>
 
-    <!-- Right: 購物車 (desktop only) -->
-    <aside class="hidden md:block md:w-80 bg-white border-l overflow-y-auto p-4">
-      <h2 class="font-bold text-gray-700 mb-3" id="cart-title">請選擇桌位</h2>
-      <div id="cart-items" class="space-y-2 mb-3 min-h-[200px]">
-        <p class="text-gray-400 text-sm text-center py-8">尚未點餐</p>
-      </div>
-      <div class="border-t pt-3 hidden" id="cart-footer">
-        <div class="flex justify-between items-center mb-3">
-          <span class="text-gray-600">總計</span>
-          <span class="text-2xl font-black text-emerald-700" id="cart-total">$0</span>
-        </div>
-        <input id="note-input" type="text" placeholder="備註" class="w-full border rounded-lg px-3 py-2 mb-3 text-sm">
-        <button onclick="submit()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition">✅ 送出訂單</button>
-      </div>
-    </aside>
-  </div>
+ <!-- Right: 購物車 (desktop only) -->
+ <aside class="hidden md:block md:w-80 bg-white border-l overflow-y-auto p-4">
+ <h2 class="font-bold text-gray-700 mb-3" id="cart-title">請選擇桌位</h2>
+ <div id="cart-items" class="space-y-2 mb-3 min-h-[200px]">
+ <p class="text-gray-400 text-sm text-center py-8">尚未點餐</p>
+ </div>
+ <div class="border-t pt-3 hidden" id="cart-footer">
+ <div class="flex justify-between items-center mb-3">
+ <span class="text-gray-600">總計</span>
+ <span class="text-2xl font-black text-emerald-700" id="cart-total">$0</span>
+ </div>
+ <input id="note-input" type="text" placeholder="備註" class="w-full border rounded-lg px-3 py-2 mb-3 text-sm">
+ <button onclick="submit()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition"> 送出訂單</button>
+ </div>
+ </aside>
+ </div>
 
-  <script src="common.js"></script>
-  <script>
-    const TOTAL_TABLES = 15;
-    let selectedTable = null;
-    let cart = {};
-    let currentCat = 'all';
+ <script src="common.js"></script>
+ <script>
+ const TOTAL_TABLES = 15;
+ let selectedTable = null;
+ let cart = {};
+ let currentCat = 'all';
 
-    function getTableStatus(tableNum) {
-      const orders = getOrders().filter(o => o.table === tableNum);
-      if (orders.length === 0) return 'empty';
-      const active = orders.find(o => o.status === 'pending' || o.status === 'preparing' || o.status === 'ready');
-      return active ? (active.status === 'pending' ? 'pending' : 'preparing') : 'done';
-    }
+ function getTableStatus(tableNum) {
+ const orders = getOrders().filter(o => o.table === tableNum);
+ if (orders.length === 0) return 'empty';
+ const active = orders.find(o => o.status === 'pending' || o.status === 'preparing' || o.status === 'ready');
+ return active ? (active.status === 'pending' ? 'pending' : 'preparing') : 'done';
+ }
 
-    function renderTables() {
-      const grid = document.getElementById('tables-grid');
-      grid.innerHTML = '';
-      for (let i = 1; i <= TOTAL_TABLES; i++) {
-        const status = getTableStatus(i);
-        const colors = {
-          empty: 'bg-emerald-100 text-emerald-700 border-emerald-300',
-          pending: 'bg-amber-100 text-amber-800 border-amber-300',
-          preparing: 'bg-blue-100 text-blue-800 border-blue-300',
-          done: 'bg-gray-100 text-gray-500 border-gray-300',
-        };
-        const btn = document.createElement('button');
-        btn.className = `table-btn p-3 rounded-lg border-2 font-bold text-sm ${colors[status]} ${selectedTable === i ? 'active' : ''} ${status !== 'empty' ? 'has-order' : ''}`;
-        btn.innerHTML = `${i}<br><span class="text-[10px] font-normal">${status === 'empty' ? '空' : status === 'pending' ? '待送' : status === 'preparing' ? '廚房' : '完成'}</span>`;
-        btn.onclick = () => selectTable(i);
-        grid.appendChild(btn);
-      }
-    }
+ function renderTables() {
+ const grid = document.getElementById('tables-grid');
+ grid.innerHTML = '';
+ for (let i = 1; i <= TOTAL_TABLES; i++) {
+ const status = getTableStatus(i);
+ const colors = {
+ empty: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+ pending: 'bg-amber-100 text-amber-800 border-amber-300',
+ preparing: 'bg-blue-100 text-blue-800 border-blue-300',
+ done: 'bg-gray-100 text-gray-500 border-gray-300',
+ };
+ const btn = document.createElement('button');
+ btn.className = `table-btn p-3 rounded-lg border-2 font-bold text-sm ${colors[status]} ${selectedTable === i ? 'active' : ''} ${status !== 'empty' ? 'has-order' : ''}`;
+ btn.innerHTML = `${i}<br><span class="text-[10px] font-normal">${status === 'empty' ? '空' : status === 'pending' ? '待送' : status === 'preparing' ? '廚房' : '完成'}</span>`;
+ btn.onclick = () => selectTable(i);
+ grid.appendChild(btn);
+ }
+ }
 
-    function selectTable(n) {
-      selectedTable = n;
-      document.getElementById('header-info').textContent = `桌位 ${n} · 點餐中`;
-      document.getElementById('cart-title').textContent = `桌位 ${n} 訂單`;
-      document.getElementById('sheet-title').textContent = `桌位 ${n} 訂單`;
-      renderTables();
-      renderCart();
-    }
+ function selectTable(n) {
+ selectedTable = n;
+ document.getElementById('header-info').textContent = `桌位 ${n} · 點餐中`;
+ document.getElementById('cart-title').textContent = `桌位 ${n} 訂單`;
+ document.getElementById('sheet-title').textContent = `桌位 ${n} 訂單`;
+ renderTables();
+ renderCart();
+ }
 
-    function renderCategoryFilter() {
-      const menu = getMenu();
-      const cats = ['all', ...new Set(menu.map(d => d.category))];
-      document.getElementById('cat-filter').innerHTML = cats.map(cat => `
-        <button data-cat="${cat}" class="cat-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${currentCat === cat ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 border'}">
-          ${cat === 'all' ? '全部' : cat}
-        </button>
-      `).join('');
-      document.querySelectorAll('.cat-btn').forEach(btn => {
-        btn.onclick = () => { currentCat = btn.dataset.cat; renderCategoryFilter(); renderDishes(); };
-      });
-    }
+ function renderCategoryFilter() {
+ const menu = getMenu();
+ const cats = ['all', ...new Set(menu.map(d => d.category))];
+ document.getElementById('cat-filter').innerHTML = cats.map(cat => `
+ <button data-cat="${cat}" class="cat-btn px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${currentCat === cat ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700 border'}">
+ ${cat === 'all' ? '全部' : cat}
+ </button>
+ `).join('');
+ document.querySelectorAll('.cat-btn').forEach(btn => {
+ btn.onclick = () => { currentCat = btn.dataset.cat; renderCategoryFilter(); renderDishes(); };
+ });
+ }
 
-    function renderDishes() {
-      const menu = getMenu().filter(d => d.available !== false);
-      const filtered = currentCat === 'all' ? menu : menu.filter(d => d.category === currentCat);
-      document.getElementById('dishes-grid').innerHTML = filtered.map(dish => {
-        const qty = cart[dish.id]?.qty || 0;
-        return `
-          <div class="bg-white rounded-xl p-3 shadow-sm flex gap-2 items-center">
-            <div class="flex-1 min-w-0">
-              <p class="font-bold text-sm truncate">${dish.name}</p>
-              <p class="text-emerald-700 text-sm font-bold">${formatPrice(dish.price)}</p>
-            </div>
-            <div class="flex items-center gap-1">
-              ${qty > 0 ? `<button onclick="upd('${dish.id}', -1)" class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 font-bold">−</button><span class="w-5 text-center font-bold text-sm">${qty}</span>` : ''}
-              <button onclick="upd('${dish.id}', 1)" class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold">+</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
+ function renderDishes() {
+ const menu = getMenu().filter(d => d.available !== false);
+ const filtered = currentCat === 'all' ? menu : menu.filter(d => d.category === currentCat);
+ document.getElementById('dishes-grid').innerHTML = filtered.map(dish => {
+ const qty = cart[dish.id]?.qty || 0;
+ return `
+ <div class="bg-white rounded-xl p-3 shadow-sm flex gap-2 items-center">
+ <div class="flex-1 min-w-0">
+ <p class="font-bold text-sm truncate">${dish.name}</p>
+ <p class="text-emerald-700 text-sm font-bold">${formatPrice(dish.price)}</p>
+ </div>
+ <div class="flex items-center gap-1">
+ ${qty > 0 ? `<button onclick="upd('${dish.id}', -1)" class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 font-bold">−</button><span class="w-5 text-center font-bold text-sm">${qty}</span>` : ''}
+ <button onclick="upd('${dish.id}', 1)" class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold">+</button>
+ </div>
+ </div>
+ `;
+ }).join('');
+ }
 
-    function upd(id, delta) {
-      const menu = getMenu();
-      const dish = menu.find(d => d.id === id);
-      if (!dish) return;
-      if (!cart[id]) cart[id] = { dish, qty: 0 };
-      cart[id].qty = Math.max(0, cart[id].qty + delta);
-      if (cart[id].qty === 0) delete cart[id];
-      renderDishes();
-      renderCart();
-    }
+ function upd(id, delta) {
+ const menu = getMenu();
+ const dish = menu.find(d => d.id === id);
+ if (!dish) return;
+ if (!cart[id]) cart[id] = { dish, qty: 0 };
+ cart[id].qty = Math.max(0, cart[id].qty + delta);
+ if (cart[id].qty === 0) delete cart[id];
+ renderDishes();
+ renderCart();
+ }
 
-    function renderCart() {
-      const items = Object.values(cart);
-      if (items.length === 0) {
-        document.getElementById('cart-items').innerHTML = '<p class="text-gray-400 text-sm text-center py-8">' + (selectedTable ? '尚未點餐' : '請選擇桌位') + '</p>';
-        document.getElementById('cart-footer').classList.add('hidden');
-        document.getElementById('cart-content').innerHTML = '';
-        return;
-      }
-      // Desktop
-      document.getElementById('cart-items').innerHTML = items.map(i => `
-        <div class="flex items-center gap-2 bg-gray-50 rounded-lg p-2 text-sm">
-          <div class="flex-1 truncate">${i.dish.name}</div>
-          <button onclick="upd('${i.dish.id}', -1)" class="w-6 h-6 rounded-full bg-white text-emerald-700 font-bold">−</button>
-          <span class="w-5 text-center font-bold">${i.qty}</span>
-          <button onclick="upd('${i.dish.id}', 1)" class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold">+</button>
-          <div class="w-12 text-right font-bold">${formatPrice(i.dish.price * i.qty)}</div>
-        </div>
-      `).join('');
-      const total = items.reduce((s, i) => s + i.qty * i.dish.price, 0);
-      document.getElementById('cart-total').textContent = formatPrice(total);
-      document.getElementById('cart-footer').classList.remove('hidden');
-      // Mobile sheet
-      document.getElementById('cart-content').innerHTML = items.map(i => `
-        <div class="flex items-center gap-2 text-sm">
-          <span class="flex-1">${i.dish.name} × ${i.qty}</span>
-          <span class="font-bold">${formatPrice(i.dish.price * i.qty)}</span>
-        </div>
-      `).join('');
-      document.getElementById('sheet-total').textContent = formatPrice(total);
-    }
+ function renderCart() {
+ const items = Object.values(cart);
+ if (items.length === 0) {
+ document.getElementById('cart-items').innerHTML = '<p class="text-gray-400 text-sm text-center py-8">' + (selectedTable ? '尚未點餐' : '請選擇桌位') + '</p>';
+ document.getElementById('cart-footer').classList.add('hidden');
+ document.getElementById('cart-content').innerHTML = '';
+ return;
+ }
+ // Desktop
+ document.getElementById('cart-items').innerHTML = items.map(i => `
+ <div class="flex items-center gap-2 bg-gray-50 rounded-lg p-2 text-sm">
+ <div class="flex-1 truncate">${i.dish.name}</div>
+ <button onclick="upd('${i.dish.id}', -1)" class="w-6 h-6 rounded-full bg-white text-emerald-700 font-bold">−</button>
+ <span class="w-5 text-center font-bold">${i.qty}</span>
+ <button onclick="upd('${i.dish.id}', 1)" class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold">+</button>
+ <div class="w-12 text-right font-bold">${formatPrice(i.dish.price * i.qty)}</div>
+ </div>
+ `).join('');
+ const total = items.reduce((s, i) => s + i.qty * i.dish.price, 0);
+ document.getElementById('cart-total').textContent = formatPrice(total);
+ document.getElementById('cart-footer').classList.remove('hidden');
+ // Mobile sheet
+ document.getElementById('cart-content').innerHTML = items.map(i => `
+ <div class="flex items-center gap-2 text-sm">
+ <span class="flex-1">${i.dish.name} × ${i.qty}</span>
+ <span class="font-bold">${formatPrice(i.dish.price * i.qty)}</span>
+ </div>
+ `).join('');
+ document.getElementById('sheet-total').textContent = formatPrice(total);
+ }
 
-    function submit() {
-      if (!selectedTable) { showToast('請先選擇桌位', 'warning'); return; }
-      if (Object.keys(cart).length === 0) { showToast('尚未點餐', 'warning'); return; }
-      const items = Object.values(cart).map(c => ({ dish_id: c.dish.id, qty: c.qty, name: c.dish.name, price: c.dish.price }));
-      const note = document.getElementById('note-input')?.value || '';
-      const order = createOrder(selectedTable, items, note);
-      // B1: 結帳跳 KDS 詢問
-      const info = `桌 ${selectedTable} · ${items.length} 項 · ${formatPrice(order.total)}`;
-      if (confirm(`✅ 訂單已送出！${info}\n\n點確定跳 KDS 看廚房狀態\n點取消繼續點下一桌`)) {
-        location.href = `kds.html#table=${selectedTable}`;
-      } else {
-        showToast(`桌 ${selectedTable} 訂單 ${order.id.slice(-6)} 已記錄`, 'info', 2000);
-      }
-      cart = {};
-      closeSheet();
-      renderDishes();
-      renderCart();
-      renderTables();
-    }
+ function submit() {
+ if (!selectedTable) { showToast('請先選擇桌位', 'warning'); return; }
+ if (Object.keys(cart).length === 0) { showToast('尚未點餐', 'warning'); return; }
+ const items = Object.values(cart).map(c => ({ dish_id: c.dish.id, qty: c.qty, name: c.dish.name, price: c.dish.price }));
+ const note = document.getElementById('note-input')?.value || '';
+ const order = createOrder(selectedTable, items, note);
+ // B1: 結帳跳 KDS 詢問
+ const info = `桌 ${selectedTable} · ${items.length} 項 · ${formatPrice(order.total)}`;
+ if (confirm(` 訂單已送出！${info}\n\n點確定跳 KDS 看廚房狀態\n點取消繼續點下一桌`)) {
+ location.href = `kds.html#table=${selectedTable}`;
+ } else {
+ showToast(`桌 ${selectedTable} 訂單 ${order.id.slice(-6)} 已記錄`, 'info', 2000);
+ }
+ cart = {};
+ closeSheet();
+ renderDishes();
+ renderCart();
+ renderTables();
+ }
 
-    function closeSheet() {
-      document.getElementById('bottom-sheet').classList.add('hidden');
-    }
+ function closeSheet() {
+ document.getElementById('bottom-sheet').classList.add('hidden');
+ }
 
-    // Init
-    renderTables();
-    renderCategoryFilter();
-    renderDishes();
-    renderCart();
+ // Init
+ renderTables();
+ renderCategoryFilter();
+ renderDishes();
+ renderCart();
 
-    // 點擊 main 區域時顯示 mobile sheet
-    document.getElementById('dishes-grid').addEventListener('click', () => {
-      if (window.innerWidth < 768 && selectedTable && Object.keys(cart).length > 0) {
-        document.getElementById('bottom-sheet').classList.remove('hidden');
-      }
-    });
-  </script>
+ // 點擊 main 區域時顯示 mobile sheet
+ document.getElementById('dishes-grid').addEventListener('click', () => {
+ if (window.innerWidth < 768 && selectedTable && Object.keys(cart).length > 0) {
+ document.getElementById('bottom-sheet').classList.remove('hidden');
+ }
+ });
+ </script>
 </body>
 </html>
